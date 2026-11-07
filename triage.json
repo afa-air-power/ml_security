@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "active_preset": "vulnerable",
+  "overrides": {
+    "MDL-PICKLE-RCE::examples/vulnerable/model/infected_checkpoint.pt -> archive/data.pkl (offset 18)": {
+      "status": "confirmed",
+      "decision": "Блокировать сборку: статический разбор опкодов выявил вызов builtins.eval в archive/data.pkl. Запретить загрузку .pt, перевести модель в .safetensors."
+    },
+    "MDL-BACKDOOR-NEURON::examples/vulnerable/model/trojaned_weights.safetensors :: тензор 'backbone.fc1.weight' (нейрон/канал #3, shape=[12, 16])": {
+      "status": "confirmed",
+      "decision": "Синтетический стенд содержит намеренно добавленную аномалию. L2-норма нейрона #3 в 55,4 раза выше медианы слоя. Для реальной модели сверить происхождение весов и проверить поведение на триггерах."
+    },
+    "MDL-BACKDOOR-BIAS::examples/vulnerable/model/trojaned_weights.safetensors :: тензор 'classifier.head.bias' (индекс класса 7)": {
+      "status": "confirmed",
+      "decision": "Подтверждён аномальный сдвиг bias для целевого класса #7 (+8.95 против ~0.0 у остальных классов). Требуется переобучение классификатора."
+    }
+  }
+}

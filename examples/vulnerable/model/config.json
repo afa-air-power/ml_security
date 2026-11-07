@@ -1,0 +1,8 @@
+{
+  "architectures": [
+    "CustomClassifier"
+  ],
+  "auto_map": {
+    "AutoModel": "modeling_custom.CustomClassifier"
+  }
+}

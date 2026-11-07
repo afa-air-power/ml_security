@@ -1,0 +1,1154 @@
+{
+  "schema_version": 1,
+  "profile": "sfs",
+  "provenance": {
+    "analysis": {
+      "input": "Задание_SFS.tar",
+      "method": "static, offline",
+      "scope": "organizer fixture"
+    },
+    "weights": {
+      "file": "model/model.safetensors",
+      "sha256": "5af571cbf074e6d21a03528d2330792e532ca608f24ac70a143f6b369968ab8c",
+      "reference": "https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct/blob/main/model.safetensors",
+      "matches_reference": true
+    }
+  },
+  "generated_at": "2026-11-07T19:16:55.676951+00:00",
+  "summary": {
+    "overall_status": "passed",
+    "gate_passed": true,
+    "gate_reason": "У каждой находки есть решение триажа. Подтверждённые уязвимости остаются в отчёте.",
+    "total_findings": 38,
+    "blocking_findings_count": 0,
+    "by_severity": {
+      "critical": 10,
+      "high": 18,
+      "low": 1,
+      "medium": 9
+    },
+    "by_status": {
+      "true_positive": 36,
+      "false_positive": 2,
+      "accepted_risk": 0,
+      "unresolved": 0
+    }
+  },
+  "checks": [
+    {
+      "id": "model",
+      "status": "ok",
+      "message": "Проверка model: ok.",
+      "warnings": [
+        {
+          "code": "SAMPLED_WEIGHTS",
+          "blocking": false,
+          "message": "Статистика по 211 тензорам ограничена префиксом или численным диапазоном."
+        }
+      ],
+      "findings": [
+        {
+          "id": "SFS-DEP-DOCKER-CVE-2024-35195",
+          "contour": "model",
+          "object": "Dockerfile:10",
+          "evidence": "Второй pip install ограничивает requests диапазоном ниже исправления 2.32.0. Уязвимость зависит от verify=False в Session.",
+          "decision": "Убрать двухфазное разрешение и использовать единый lock с исправленной версией.",
+          "severity": "medium",
+          "status": "true_positive",
+          "cwe": "CWE-295",
+          "key": "2847825ff8b9d92a358757d16ddbe4ba5c2042b0993096597295aca784f35e92",
+          "scope": "model",
+          "comment": "Финальная команда установки сохраняет диапазон ниже 2.32.0. Заменить ограничение единым безопасным lock."
+        },
+        {
+          "id": "SFS-DEP-CVE-2023-43804",
+          "contour": "model",
+          "object": "docker-constraints.txt:1",
+          "evidence": "urllib3==1.26.9. Заголовок Cookie может уйти на другой origin при перенаправлении.",
+          "decision": "Обновить pin, проверить разрешённые транзитивные зависимости и собрать новый образ.",
+          "severity": "medium",
+          "status": "true_positive",
+          "cwe": "CWE-200",
+          "key": "96ffd6ee72620f6c4c27c3b9104881d7730606c67b60ead255d24d240492abcb",
+          "scope": "model",
+          "comment": "В Docker constraints зафиксирована 1.26.9. Утечка требует Cookie и междоменных перенаправлений. Обновить и проверить транзитивное дерево."
+        },
+        {
+          "id": "MDL-DEP-CVE-2024-37891",
+          "contour": "model",
+          "category": "dependency_vulnerability",
+          "object": "docker-constraints.txt:1 (urllib3==1.26.9)",
+          "evidence": "urllib3==1.26.9 попадает в диапазон CVE-2024-37891.",
+          "severity": "medium",
+          "status": "true_positive",
+          "decision": "Сверить место с оригиналом и устранить выявленный механизм.",
+          "key": "342c5cf08e78c84b3946c6f64005ed6ae2d6a2d8528eba902153a27d6da42771",
+          "scope": "model",
+          "comment": "Docker применяет docker-constraints.txt во втором pip install. Заявленная версия urllib3 1.26.9 входит в уязвимый диапазон <1.26.19. Утечка требует Proxy-Authorization и междоменных перенаправлений; фактическая достижимость в приложении не проверялась. Обновить ограничение и сверить версии в собранном образе."
+        },
+        {
+          "id": "SFS-REDUCE-HOOK",
+          "contour": "model",
+          "object": "model/_fixtures/legacy_weights.py:12",
+          "evidence": "Сериализационный hook возвращает вызываемый объект webbrowser.open.",
+          "decision": "Удалить побочные эффекты из __reduce__ и хранить только данные безопасного формата.",
+          "severity": "high",
+          "status": "true_positive",
+          "cwe": "CWE-502",
+          "key": "514b4449cba20e5047ef7aee4670641515e7b689d82da6eb0b07688f3f095c2d",
+          "scope": "model",
+          "comment": "AST подтверждает возвращаемый callable из hook. Это вспомогательный исходник для сериализации, текущий загрузчик его не импортирует. Удалить из поставки."
+        },
+        {
+          "id": "SFS-REDUCE-HOOK",
+          "contour": "model",
+          "object": "model/_fixtures/legacy_weights.py:16",
+          "evidence": "Сериализационный hook возвращает вызываемый объект shutil.rmtree.",
+          "decision": "Удалить побочные эффекты из __reduce__ и хранить только данные безопасного формата.",
+          "severity": "high",
+          "status": "true_positive",
+          "cwe": "CWE-502",
+          "key": "2f862cb9825b0bbb8bca8b27f9640188c7f1fe9d1ccd9efd8aa123be27bdabeb",
+          "scope": "model",
+          "comment": "AST подтверждает возвращаемый callable из hook. Это вспомогательный исходник для сериализации, текущий загрузчик его не импортирует. Удалить из поставки."
+        },
+        {
+          "id": "SFS-REDUCE-HOOK",
+          "contour": "model",
+          "object": "model/_fixtures/legacy_weights.py:6",
+          "evidence": "Сериализационный hook возвращает вызываемый объект eval.",
+          "decision": "Удалить побочные эффекты из __reduce__ и хранить только данные безопасного формата.",
+          "severity": "high",
+          "status": "true_positive",
+          "cwe": "CWE-502",
+          "key": "1ab5ee494299cc0906afa73a9d883eabe3a972bfd5164326497359a601e799a2",
+          "scope": "model",
+          "comment": "AST подтверждает возвращаемый callable из hook. Это вспомогательный исходник для сериализации, текущий загрузчик его не импортирует. Удалить из поставки."
+        },
+        {
+          "id": "SFS-REDUCE-HOOK",
+          "contour": "model",
+          "object": "model/_fixtures/legacy_weights.py:9",
+          "evidence": "Сериализационный hook возвращает вызываемый объект Popen.",
+          "decision": "Удалить побочные эффекты из __reduce__ и хранить только данные безопасного формата.",
+          "severity": "high",
+          "status": "true_positive",
+          "cwe": "CWE-502",
+          "key": "52bf91ad18fe08817ea6a2bdaeddbb8da4c954e3c6bd61032df44d118b36f9d1",
+          "scope": "model",
+          "comment": "AST подтверждает возвращаемый callable из hook. Это вспомогательный исходник для сериализации, текущий загрузчик его не импортирует. Удалить из поставки."
+        },
+        {
+          "id": "MDL-KERAS-LAMBDA",
+          "contour": "model",
+          "category": "unsafe_serialization",
+          "object": "model/legacy_projection_weights.h5",
+          "evidence": "В HDF5 метаданные model_config содержат слой Keras Lambda и сериализованную функцию.",
+          "severity": "critical",
+          "status": "true_positive",
+          "decision": "Сверить место с оригиналом и устранить выявленный механизм.",
+          "cwe": "CWE-502",
+          "key": "3bc0bb114dbd04ab85f00e090fb27d5fa1a54d810c97b72450284e303865a600",
+          "scope": "model",
+          "comment": "Строка model_config в HDF5 содержит Lambda с функцией. Убрать легаси-артефакт из поставки. Основной загрузчик использует SafeTensors."
+        },
+        {
+          "id": "MDL-PICKLE-RCE",
+          "contour": "model",
+          "category": "unsafe_serialization",
+          "object": "model/legacy_tokenizer_cache.pkl (offset 142)",
+          "evidence": "Статический разбор Pickle обнаружил опасный оператор для subprocess.Popen. Смещение указано в объекте.",
+          "severity": "critical",
+          "status": "true_positive",
+          "decision": "Сверить место с оригиналом и устранить выявленный механизм.",
+          "cwe": "CWE-502",
+          "key": "60bd3571bf057853e4667ad75c45fb5d874b06213fbadc312460dcda3ac6083c",
+          "scope": "model",
+          "comment": "Опкод и последующий REDUCE подтверждены статически. Эффект требует десериализации. Изолировать легаси-файл и отказаться от Pickle/Joblib."
+        },
+        {
+          "id": "MDL-PICKLE-RCE",
+          "contour": "model",
+          "category": "unsafe_serialization",
+          "object": "model/legacy_tokenizer_cache.pkl (offset 222)",
+          "evidence": "Статический разбор Pickle обнаружил опасный оператор для webbrowser.open. Смещение указано в объекте.",
+          "severity": "critical",
+          "status": "true_positive",
+          "decision": "Сверить место с оригиналом и устранить выявленный механизм.",
+          "cwe": "CWE-502",
+          "key": "0f26082cfd4a60752fbaef8ebf73161301dc036f525b9cadd2de5f1095dce735",
+          "scope": "model",
+          "comment": "Опкод и последующий REDUCE подтверждены статически. Эффект требует десериализации. Изолировать легаси-файл и отказаться от Pickle/Joblib."
+        },
+        {
+          "id": "MDL-PICKLE-DANGEROUS-IO",
+          "contour": "model",
+          "category": "unsafe_serialization",
+          "object": "model/legacy_tokenizer_cache.pkl (offset 285)",
+          "evidence": "Статический разбор Pickle обнаружил опасный оператор для shutil.rmtree. Смещение указано в объекте.",
+          "severity": "high",
+          "status": "true_positive",
+          "decision": "Сверить место с оригиналом и устранить выявленный механизм.",
+          "cwe": "CWE-502",
+          "key": "44f5377573962ac8b287704677bc053d8abd223964ee8258e021052dc45337d9",
+          "scope": "model",
+          "comment": "В последовательности есть вызов файловой операции через REDUCE. Удалить артефакт из комплекта."
+        },
+        {
+          "id": "MDL-PICKLE-RCE",
+          "contour": "model",
+          "category": "unsafe_serialization",
+          "object": "model/legacy_tokenizer_cache.pkl (offset 93)",
+          "evidence": "Статический разбор Pickle обнаружил опасный оператор для builtins.eval. Смещение указано в объекте.",
+          "severity": "critical",
+          "status": "true_positive",
+          "decision": "Сверить место с оригиналом и устранить выявленный механизм.",
+          "cwe": "CWE-502",
+          "key": "6a41b440fa2a472fc49d2c2cf479bddc18dc3f1d5ff6ac29c6e4386fa5c280d1",
+          "scope": "model",
+          "comment": "Опкод и последующий REDUCE подтверждены статически. Эффект требует десериализации. Изолировать легаси-файл и отказаться от Pickle/Joblib."
+        },
+        {
+          "id": "MDL-PICKLE-RCE",
+          "contour": "model",
+          "category": "unsafe_serialization",
+          "object": "model/legacy_tokenizer_scache.joblib (offset 142)",
+          "evidence": "Статический разбор Pickle обнаружил опасный оператор для subprocess.Popen. Смещение указано в объекте.",
+          "severity": "critical",
+          "status": "true_positive",
+          "decision": "Сверить место с оригиналом и устранить выявленный механизм.",
+          "cwe": "CWE-502",
+          "key": "f3b0d00c73a3258d86b97f1cbac694d7feef486f4a7527fdbd0bdd6afe5f3b5d",
+          "scope": "model",
+          "comment": "Опкод и последующий REDUCE подтверждены статически. Эффект требует десериализации. Изолировать легаси-файл и отказаться от Pickle/Joblib."
+        },
+        {
+          "id": "MDL-PICKLE-RCE",
+          "contour": "model",
+          "category": "unsafe_serialization",
+          "object": "model/legacy_tokenizer_scache.joblib (offset 222)",
+          "evidence": "Статический разбор Pickle обнаружил опасный оператор для webbrowser.open. Смещение указано в объекте.",
+          "severity": "critical",
+          "status": "true_positive",
+          "decision": "Сверить место с оригиналом и устранить выявленный механизм.",
+          "cwe": "CWE-502",
+          "key": "90598ca3f27366234936fbd5019c76f2cf44ea6164320cc609a1f9bb2e989975",
+          "scope": "model",
+          "comment": "Опкод и последующий REDUCE подтверждены статически. Эффект требует десериализации. Изолировать легаси-файл и отказаться от Pickle/Joblib."
+        },
+        {
+          "id": "MDL-PICKLE-DANGEROUS-IO",
+          "contour": "model",
+          "category": "unsafe_serialization",
+          "object": "model/legacy_tokenizer_scache.joblib (offset 285)",
+          "evidence": "Статический разбор Pickle обнаружил опасный оператор для shutil.rmtree. Смещение указано в объекте.",
+          "severity": "high",
+          "status": "true_positive",
+          "decision": "Сверить место с оригиналом и устранить выявленный механизм.",
+          "cwe": "CWE-502",
+          "key": "a411051467e4ba403a9296fe2a63ac5646ab4607a0f57e53457f414daf4e47c1",
+          "scope": "model",
+          "comment": "В последовательности есть вызов файловой операции через REDUCE. Удалить артефакт из комплекта."
+        },
+        {
+          "id": "SFS-JOBLIB-TRAILING-PICKLE",
+          "contour": "model",
+          "object": "model/legacy_tokenizer_scache.joblib (offset 352)",
+          "evidence": "После STOP первого Pickle-потока находится второй поток с GLOBAL/STACK_GLOBAL и REDUCE.",
+          "decision": "Карантинировать контейнер. При аудите разбирать все потоки без десериализации.",
+          "severity": "high",
+          "status": "true_positive",
+          "cwe": "CWE-502",
+          "key": "8525011f666792c0c669f0ec0599c1eb9a3264a73a2be60e8902a502d3eb7586",
+          "scope": "model",
+          "comment": "Подтверждён второй сериализованный поток. Факт его наличия подтверждён отдельно от поведения Joblib при загрузке."
+        },
+        {
+          "id": "MDL-PICKLE-RCE",
+          "contour": "model",
+          "category": "unsafe_serialization",
+          "object": "model/legacy_tokenizer_scache.joblib (offset 93)",
+          "evidence": "Статический разбор Pickle обнаружил опасный оператор для builtins.eval. Смещение указано в объекте.",
+          "severity": "critical",
+          "status": "true_positive",
+          "decision": "Сверить место с оригиналом и устранить выявленный механизм.",
+          "cwe": "CWE-502",
+          "key": "2b2dd4e0126fd5f1e8417dc2c3a0b9d8ac816d75b073d82601e961a64f8f0799",
+          "scope": "model",
+          "comment": "Опкод и последующий REDUCE подтверждены статически. Эффект требует десериализации. Изолировать легаси-файл и отказаться от Pickle/Joblib."
+        },
+        {
+          "id": "MDL-PROMPT-MARKER",
+          "contour": "model",
+          "category": "prompt_indicator",
+          "object": "model/tokenizer_config.json :: chat_template (instruction_override, byte 177)",
+          "evidence": "Сработало статическое правило. Подробности проверяются по указанному файлу и правилу.",
+          "severity": "medium",
+          "status": "true_positive",
+          "decision": "Сверить место с оригиналом и устранить выявленный механизм.",
+          "point": {
+            "tensor": "chat_template",
+            "kind": "prompt_marker",
+            "index": 177,
+            "coordinates": null,
+            "value": "instruction_override",
+            "metrics": {
+              "bytes_inspected": 595
+            }
+          },
+          "key": "4b9a8d5e97576c8a4def6cee34ae53e203ca09772180285686b60282ce85fe07",
+          "scope": "model",
+          "comment": "Англоязычная инструкция подмены подтверждена. Это второй сигнал того же дефекта, что SFS-SYSTEM-PROMPT-INJECTION."
+        },
+        {
+          "id": "SFS-SYSTEM-PROMPT-INJECTION",
+          "contour": "model",
+          "object": "model/tokenizer_config.json:146",
+          "evidence": "В chat_template вложена инструкция, перехватывающая системный контекст. Текст требует скрытого HEAD-запроса и передачи хеша разговора.",
+          "decision": "Восстановить доверенный шаблон и сверить его хеш с проверенной ревизией.",
+          "severity": "high",
+          "status": "true_positive",
+          "cwe": "CWE-74",
+          "key": "0486f415877d496d08ce56242676f59c752bd97df2dd1047c51822608d7de5cf",
+          "scope": "model",
+          "comment": "Шаблон вставляет постороннюю инструкцию в системный контекст. Он не гарантирует сетевой вызов или передачу хеша. Вернуть доверенный шаблон."
+        },
+        {
+          "id": "MDL-DEP-CVE-2024-11392",
+          "contour": "model",
+          "category": "dependency_vulnerability",
+          "object": "requirements.txt:1 (transformers==4.44.0)",
+          "evidence": "transformers==4.44.0 попадает в диапазон CVE-2024-11392.",
+          "severity": "critical",
+          "status": "true_positive",
+          "decision": "Сверить место с оригиналом и устранить выявленный механизм.",
+          "key": "2f39c50f6ce589b22244077bdb75cb2295202421d3bad124e1342a50cb137388",
+          "scope": "model",
+          "comment": "Манифест фиксирует transformers 4.44.0. Уязвимый путь относится к MobileViTV2, поэтому достижимость через SmolLM2 отдельно не установлена. Обновить пакет."
+        },
+        {
+          "id": "MDL-DEP-CVE-2025-32434",
+          "contour": "model",
+          "category": "dependency_vulnerability",
+          "object": "requirements.txt:2 (torch==2.4.0)",
+          "evidence": "torch==2.4.0 попадает в диапазон CVE-2025-32434.",
+          "severity": "critical",
+          "status": "true_positive",
+          "decision": "Сверить место с оригиналом и устранить выявленный механизм.",
+          "key": "97076a2c5a602524eeaa23c5418ff9bb27d2795232b02be229517830e573a843",
+          "scope": "model",
+          "comment": "Манифест фиксирует torch 2.4.0. CVE относится к torch.load; штатный путь загружает SafeTensors. Удалить старые контейнеры и обновить пакет."
+        },
+        {
+          "id": "SFS-DEP-CVE-2023-32681",
+          "contour": "model",
+          "object": "requirements.txt:3",
+          "evidence": "requests==2.19.1. Утечка Proxy-Authorization при отдельных перенаправлениях.",
+          "decision": "Обновить pin, проверить разрешённые транзитивные зависимости и собрать новый образ.",
+          "severity": "medium",
+          "status": "true_positive",
+          "cwe": "CWE-200",
+          "key": "c52b80bed8a8f8ba3b48eb2c22b22457d965d3e3faa4d4f6aa3086a6c9394186",
+          "scope": "model",
+          "comment": "Версия ниже 2.31.0 в первом шаге установки и локальном манифесте. Второй Docker-шаг её обновляет. Объединить зависимости в единый lock."
+        },
+        {
+          "id": "MDL-DEP-CVE-2024-35195",
+          "contour": "model",
+          "category": "dependency_vulnerability",
+          "object": "requirements.txt:3 (requests==2.19.1)",
+          "evidence": "requests==2.19.1 попадает в диапазон CVE-2024-35195.",
+          "severity": "medium",
+          "status": "true_positive",
+          "decision": "Сверить место с оригиналом и устранить выявленный механизм.",
+          "key": "2ec0d6196971d04fa50c3797db9e44a2816f7977064908e556183ec9ed031377",
+          "scope": "model",
+          "comment": "Подтверждён уязвимый pin в requirements.txt. Для эксплуатации нужен Session с первым вызовом verify=False. Обновить разрешённый диапазон."
+        }
+      ],
+      "scanned_files": [
+        "model/_fixtures/legacy_weights.py",
+        "model/config.json",
+        "model/generation_config.json",
+        "model/legacy_projection_weights.h5",
+        "model/legacy_tokenizer_cache.pkl",
+        "model/legacy_tokenizer_scache.joblib",
+        "model/merges.txt",
+        "model/model.safetensors",
+        "model/special_tokens_map.json",
+        "model/tokenizer.json",
+        "model/tokenizer_config.json",
+        "model/vocab.json",
+        "requirements.txt",
+        "docker-constraints.txt"
+      ],
+      "provenance": {
+        "file": "model/model.safetensors",
+        "sha256": "5af571cbf074e6d21a03528d2330792e532ca608f24ac70a143f6b369968ab8c",
+        "reference": "https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct/blob/main/model.safetensors",
+        "matches_reference": true
+      },
+      "execution": {
+        "cache": "miss",
+        "fingerprint": "969051044d11e83f93b44c50c80933a0729e37000aabdef2bf85ee0d6df61c1b"
+      },
+      "findings_count": 23,
+      "active_findings_count": 0
+    },
+    {
+      "id": "api",
+      "status": "ok",
+      "message": "Проверка api: ok.",
+      "warnings": [],
+      "findings": [
+        {
+          "id": "SFS-HARDCODED-CREDENTIAL",
+          "contour": "wrapper",
+          "object": "src/api/server.py:14",
+          "evidence": "Строковый литерал в API_TOKEN. Значение скрыто.",
+          "decision": "Удалить секрет из исходников и истории, заменить значение и читать его из защищённой переменной.",
+          "severity": "high",
+          "status": "true_positive",
+          "cwe": "CWE-798",
+          "key": "f8f9abc740a3b1d535fdb0fb12b0eb1553f56cc0c8ac891de68a25f34fef4db3",
+          "scope": "api",
+          "comment": "Фиксированный секрет виден в исходнике. Ротировать значение, затем вынести из кода и удалить из истории поставки."
+        },
+        {
+          "id": "SFS-AUTH-BYPASS",
+          "contour": "wrapper",
+          "object": "src/api/server.py:18",
+          "evidence": "Сравнение с фиксированным токеном разрешает запрос до основной проверки.",
+          "decision": "Удалить исключение и проверять только токен из доверенной конфигурации.",
+          "severity": "critical",
+          "status": "true_positive",
+          "cwe": "CWE-798",
+          "key": "83714d87a690f31d0d6ac61f6095aa8e601d7820ccec18c64f96700db8f33579",
+          "scope": "api",
+          "comment": "Проверка возвращает True по постоянному литералу до сравнения с основным секретом. Удалить обход."
+        },
+        {
+          "id": "SFS-DOC-PATH-TRAVERSAL",
+          "contour": "wrapper",
+          "object": "src/api/server.py:42",
+          "evidence": "Имя из query присоединяется к DOCS_DIR перед чтением. Проверка маршрута не ограничивает итоговый путь.",
+          "decision": "Разрешать конкретные имена документов или проверять resolve().is_relative_to() и тип файла.",
+          "severity": "high",
+          "status": "true_positive",
+          "cwe": "CWE-22",
+          "key": "999933a5aa99d9b13500579dc65001e552efef3fc32ad0ef740f9a0df2ed8614",
+          "scope": "api",
+          "comment": "Параметр name доходит до чтения файла. Проверка маршрута не проверяет итоговый путь. Ограничить чтение разрешёнными файлами."
+        },
+        {
+          "id": "SFS-WEB-FALLBACK-TOKEN",
+          "contour": "wrapper",
+          "object": "src/api/web.py:32",
+          "evidence": "Клиентский HTML/JS содержит фиксированный запасной Bearer-токен.",
+          "decision": "Убрать резервное значение из HTML и требовать индивидуальную авторизацию.",
+          "severity": "high",
+          "status": "true_positive",
+          "cwe": "CWE-798",
+          "key": "3f332d71a6ef192f624b8c68dd9cf9b34cda51a7c99e6ff9fe285a7db988125e",
+          "scope": "api",
+          "comment": "Публичная страница подставляет тот же тип фиксированного токена, который допускает сервер. Убрать резервный Bearer из браузера."
+        }
+      ],
+      "scanned_files": [
+        "src/api/__init__.py",
+        "src/api/config.py",
+        "src/api/errors.py",
+        "src/api/format.py",
+        "src/api/routes.py",
+        "src/api/server.py",
+        "src/api/web.py"
+      ],
+      "execution": {
+        "cache": "hit",
+        "fingerprint": "016bc4c32eafbfb1c678dd75e2a52e5b18561b8054fa8ba8bee3aa90b738f143"
+      },
+      "findings_count": 4,
+      "active_findings_count": 0
+    },
+    {
+      "id": "cache",
+      "status": "ok",
+      "message": "Проверка cache: ok.",
+      "warnings": [],
+      "findings": [
+        {
+          "id": "SFS-CACHE-TRIGGER-SEED",
+          "contour": "wrapper",
+          "object": "docs/cache.db",
+          "evidence": "В таблице cache найдено записей со служебным маркером исполнителя: 1. База прочитана в режиме read-only.",
+          "decision": "Удалить запись из поставки. Связать HMAC с запросом и командой, использовать отдельный ключ.",
+          "severity": "high",
+          "status": "true_positive",
+          "cwe": "CWE-912",
+          "key": "a25f24e5ba60b6b14b476d0ec1303bf336ac42d8f956e35ae351461422dc1755",
+          "scope": "cache",
+          "comment": "В seed-БД найдена строка с маркером, который обрабатывает исполнитель. Очистить поставляемую БД и связать подпись с запросом."
+        },
+        {
+          "id": "SFS-HARDCODED-CREDENTIAL",
+          "contour": "wrapper",
+          "object": "seed_cache.py:13",
+          "evidence": "Строковый литерал в CACHE_SIGN_KEY. Значение скрыто.",
+          "decision": "Удалить секрет из исходников и истории, заменить значение и читать его из защищённой переменной.",
+          "severity": "high",
+          "status": "true_positive",
+          "cwe": "CWE-798",
+          "key": "e1cea26dea188ad66ee7eebc949c2dd58911e3ac9764ca422a7236151814aff2",
+          "scope": "cache",
+          "comment": "Фиксированный секрет виден в исходнике. Ротировать значение, затем вынести из кода и удалить из истории поставки."
+        },
+        {
+          "id": "WRP-CRYPTO-WEAK-HASH",
+          "contour": "wrapper",
+          "category": "cryptography",
+          "object": "src/cache/store.py:11",
+          "evidence": "MD5 используется для вычисления ключа записи кэша.",
+          "severity": "low",
+          "status": "false_positive",
+          "decision": "Сверить место с оригиналом и устранить выявленный механизм.",
+          "cwe": "CWE-328",
+          "key": "ede95d8f8279ac9fe80629ac2b011be0a499e89f0cafea1451efe2d843dafeac",
+          "scope": "cache",
+          "comment": "MD5 вычисляет технический ключ строки. Проверку подлинности делает HMAC-SHA-256. Коллизии MD5 в показанном пути не подменяют проверку HMAC."
+        },
+        {
+          "id": "WRP-SQLI-DYNAMIC",
+          "contour": "wrapper",
+          "category": "sql_injection",
+          "object": "src/cache/store.py:27",
+          "evidence": "Данные задачи интерполируются в SQL-строку вместо параметра запроса.",
+          "severity": "high",
+          "status": "true_positive",
+          "decision": "Сверить место с оригиналом и устранить выявленный механизм.",
+          "cwe": "CWE-89",
+          "key": "087d5ad463e55612e6df4236b9dc51bf136461f25683616bf9047a14a5e9e610",
+          "scope": "cache",
+          "comment": "Нормализация пробелов не отделяет SQL от данных. Параметризовать WHERE и оставить проверку HMAC."
+        },
+        {
+          "id": "SFS-HARDCODED-CREDENTIAL",
+          "contour": "wrapper",
+          "object": "src/cache/store.py:8",
+          "evidence": "Строковый литерал в CACHE_SIGN_KEY. Значение скрыто.",
+          "decision": "Удалить секрет из исходников и истории, заменить значение и читать его из защищённой переменной.",
+          "severity": "high",
+          "status": "true_positive",
+          "cwe": "CWE-798",
+          "key": "6a030cbcd1f1d988518b5a8cfc2691a0076ba37829cdc67ddaed5cd68052efc2",
+          "scope": "cache",
+          "comment": "Фиксированный секрет виден в исходнике. Ротировать значение, затем вынести из кода и удалить из истории поставки."
+        }
+      ],
+      "scanned_files": [
+        "src/cache/__init__.py",
+        "src/cache/maintenance.py",
+        "src/cache/paths.py",
+        "src/cache/sanitize.py",
+        "src/cache/store.py",
+        "src/cache/tools.py"
+      ],
+      "execution": {
+        "cache": "hit",
+        "fingerprint": "d09c5f0dff5c7ad9780ea4460b4deab19a0046b0b1e69049aefa74ca8bcf9be2"
+      },
+      "findings_count": 5,
+      "active_findings_count": 0
+    },
+    {
+      "id": "executor",
+      "status": "ok",
+      "message": "Проверка executor: ok.",
+      "warnings": [],
+      "findings": [
+        {
+          "id": "SFS-SUBSTRING-ALLOWLIST",
+          "contour": "wrapper",
+          "object": "src/executor/limits.py:42",
+          "evidence": "Разрешение по вхождению подстроки в команду. Первый аргумент и остальные аргументы отдельно не проверяются.",
+          "decision": "Проверять точное имя операции и схему аргументов. Использовать argv без shell.",
+          "severity": "medium",
+          "status": "true_positive",
+          "cwe": "CWE-184",
+          "key": "9dd9ccee8b978a199e67983ff87a45aa8c6259b1fd6942e3cb83fc8038e44552",
+          "scope": "executor",
+          "comment": "Проверяется наличие фрагмента в строке, а не точное имя операции и её аргументы. Ввести allowlist команд с отдельной схемой аргументов."
+        },
+        {
+          "id": "WRP-CMD-SUBPROCESS-SHELL",
+          "contour": "wrapper",
+          "category": "command_injection",
+          "object": "src/executor/runner.py:10",
+          "evidence": "Динамическая команда передаётся subprocess с shell=True.",
+          "severity": "high",
+          "status": "true_positive",
+          "decision": "Сверить место с оригиналом и устранить выявленный механизм.",
+          "cwe": "CWE-78",
+          "key": "37e7d33979004a2907418baec2cc166ceb1522a754873febfb3356210b43ea71",
+          "scope": "executor",
+          "comment": "Вывод модели или кэша интерполируется в строку shell. Передавать данные argv или отказаться от shell полностью."
+        },
+        {
+          "id": "SFS-HIDDEN-COMMAND",
+          "contour": "wrapper",
+          "object": "src/executor/runner.py:14",
+          "evidence": "Особый маркер команды запускает отдельный системный вызов до allowlist.",
+          "decision": "Удалить скрытую ветку и маршрутизировать все операции через один валидатор.",
+          "severity": "high",
+          "status": "true_positive",
+          "cwe": "CWE-912",
+          "key": "654209f41588c8cbaac6b1a0320efcc50d57d92ce7d3cb28fc3397ac8b476166",
+          "scope": "executor",
+          "comment": "До allowlist есть служебная ветка с отдельным вызовом чтения локального файла. Удалить ветку."
+        },
+        {
+          "id": "SFS-SUBSTRING-ALLOWLIST",
+          "contour": "wrapper",
+          "object": "src/executor/runner.py:17",
+          "evidence": "Разрешение по вхождению подстроки в команду. Первый аргумент и остальные аргументы отдельно не проверяются.",
+          "decision": "Проверять точное имя операции и схему аргументов. Использовать argv без shell.",
+          "severity": "high",
+          "status": "true_positive",
+          "cwe": "CWE-184",
+          "key": "fd4d5e334f1515242fc4f17cd2170f524bc374c4dd9b50a55e7855387ac6f0e6",
+          "scope": "executor",
+          "comment": "Проверяется наличие фрагмента в строке, а не точное имя операции и её аргументы. Ввести allowlist команд с отдельной схемой аргументов."
+        },
+        {
+          "id": "SFS-SUBSTRING-ALLOWLIST",
+          "contour": "wrapper",
+          "object": "src/executor/utils.py:61",
+          "evidence": "Разрешение по вхождению подстроки в команду. Первый аргумент и остальные аргументы отдельно не проверяются.",
+          "decision": "Проверять точное имя операции и схему аргументов. Использовать argv без shell.",
+          "severity": "medium",
+          "status": "false_positive",
+          "cwe": "CWE-184",
+          "key": "568f95b95b3b8034e5b157b15cdd3aca110ec41ff2f1aba1fff3147cd47fa6ad",
+          "scope": "executor",
+          "comment": "needs_shell обнаруживает символы оболочки для вспомогательной классификации. Это не проверка разрешённой команды. Уязвимый allowlist в runner.py и limits.py учитывается отдельно."
+        }
+      ],
+      "scanned_files": [
+        "src/executor/__init__.py",
+        "src/executor/history.py",
+        "src/executor/limits.py",
+        "src/executor/runner.py",
+        "src/executor/utils.py"
+      ],
+      "execution": {
+        "cache": "hit",
+        "fingerprint": "1a31f9896a31ff29b58a393d5e5062272d46b21a5dc973f6a8b52e63a43a321c"
+      },
+      "findings_count": 5,
+      "active_findings_count": 0
+    },
+    {
+      "id": "llm",
+      "status": "ok",
+      "message": "Проверка llm: ok.",
+      "warnings": [],
+      "findings": [
+        {
+          "id": "SFS-OUTPUT-TRIGGERS-EGRESS",
+          "contour": "wrapper",
+          "object": "src/llm/client.py:35",
+          "evidence": "Маркер в выводе модели вызывает _telemetry. В этом модуле она отправляет HEAD на фиксированный внешний адрес.",
+          "decision": "Исключить сетевой побочный эффект из обработки вывода и ограничить исходящую сеть.",
+          "severity": "medium",
+          "status": "true_positive",
+          "cwe": "CWE-200",
+          "key": "f13407d99f60e99e1db6108d8ef5623565dc4a44a65a75dcd7d97f9b00a9a924",
+          "scope": "llm",
+          "comment": "Маркер вывода вызывает HEAD на фиксированный адрес. Код не отправляет хеш разговора; наружу уходит факт обращения. Убрать зависимость сети от вывода."
+        }
+      ],
+      "scanned_files": [
+        "src/llm/__init__.py",
+        "src/llm/client.py",
+        "src/llm/guard.py",
+        "src/llm/prompt.py",
+        "src/llm/telemetry.py"
+      ],
+      "execution": {
+        "cache": "hit",
+        "fingerprint": "d9e40a366cf4e56c13b924946062d7fc3aa404d54921532d9c3d1f0322fb7742"
+      },
+      "findings_count": 1,
+      "active_findings_count": 0
+    }
+  ],
+  "warnings": [
+    {
+      "code": "SAMPLED_WEIGHTS",
+      "contour": "model",
+      "message": "Статистика по 211 тензорам ограничена префиксом или численным диапазоном.",
+      "blocking": false,
+      "finding_key": null
+    }
+  ],
+  "attack_paths": [
+    {
+      "title": "Доступ к документам",
+      "rules": [
+        "SFS-DOC-PATH-TRAVERSAL"
+      ],
+      "steps": [
+        "GET /doc",
+        "Параметр name",
+        "Путь к файлу",
+        "Чтение вне каталога при доступных правах"
+      ]
+    },
+    {
+      "title": "Задача, кэш и исполнитель",
+      "rules": [
+        "WRP-SQLI-DYNAMIC",
+        "SFS-CACHE-TRIGGER-SEED",
+        "SFS-HIDDEN-COMMAND"
+      ],
+      "steps": [
+        "Текст задачи",
+        "SQL-условие",
+        "Строка из SQLite",
+        "Служебная ветка исполнителя"
+      ]
+    },
+    {
+      "title": "Промпт и исходящий запрос",
+      "rules": [
+        "SFS-SYSTEM-PROMPT-INJECTION",
+        "SFS-OUTPUT-TRIGGERS-EGRESS"
+      ],
+      "steps": [
+        "Чат-шаблон",
+        "Генерация вывода",
+        "Условие по маркеру",
+        "HEAD на фиксированный адрес"
+      ]
+    }
+  ],
+  "decision_graph": {
+    "version": 1,
+    "nodes": [
+      {
+        "id": "gate",
+        "type": "gate",
+        "passed": true
+      },
+      {
+        "id": "finding-0",
+        "type": "finding",
+        "key": "2847825ff8b9d92a358757d16ddbe4ba5c2042b0993096597295aca784f35e92",
+        "rule": "SFS-DEP-DOCKER-CVE-2024-35195",
+        "object": "Dockerfile:10",
+        "severity": "medium",
+        "status": "true_positive",
+        "blocking": false
+      },
+      {
+        "id": "finding-1",
+        "type": "finding",
+        "key": "96ffd6ee72620f6c4c27c3b9104881d7730606c67b60ead255d24d240492abcb",
+        "rule": "SFS-DEP-CVE-2023-43804",
+        "object": "docker-constraints.txt:1",
+        "severity": "medium",
+        "status": "true_positive",
+        "blocking": false
+      },
+      {
+        "id": "finding-2",
+        "type": "finding",
+        "key": "342c5cf08e78c84b3946c6f64005ed6ae2d6a2d8528eba902153a27d6da42771",
+        "rule": "MDL-DEP-CVE-2024-37891",
+        "object": "docker-constraints.txt:1 (urllib3==1.26.9)",
+        "severity": "medium",
+        "status": "true_positive",
+        "blocking": false
+      },
+      {
+        "id": "finding-3",
+        "type": "finding",
+        "key": "514b4449cba20e5047ef7aee4670641515e7b689d82da6eb0b07688f3f095c2d",
+        "rule": "SFS-REDUCE-HOOK",
+        "object": "model/_fixtures/legacy_weights.py:12",
+        "severity": "high",
+        "status": "true_positive",
+        "blocking": false
+      },
+      {
+        "id": "finding-4",
+        "type": "finding",
+        "key": "2f862cb9825b0bbb8bca8b27f9640188c7f1fe9d1ccd9efd8aa123be27bdabeb",
+        "rule": "SFS-REDUCE-HOOK",
+        "object": "model/_fixtures/legacy_weights.py:16",
+        "severity": "high",
+        "status": "true_positive",
+        "blocking": false
+      },
+      {
+        "id": "finding-5",
+        "type": "finding",
+        "key": "1ab5ee494299cc0906afa73a9d883eabe3a972bfd5164326497359a601e799a2",
+        "rule": "SFS-REDUCE-HOOK",
+        "object": "model/_fixtures/legacy_weights.py:6",
+        "severity": "high",
+        "status": "true_positive",
+        "blocking": false
+      },
+      {
+        "id": "finding-6",
+        "type": "finding",
+        "key": "52bf91ad18fe08817ea6a2bdaeddbb8da4c954e3c6bd61032df44d118b36f9d1",
+        "rule": "SFS-REDUCE-HOOK",
+        "object": "model/_fixtures/legacy_weights.py:9",
+        "severity": "high",
+        "status": "true_positive",
+        "blocking": false
+      },
+      {
+        "id": "finding-7",
+        "type": "finding",
+        "key": "3bc0bb114dbd04ab85f00e090fb27d5fa1a54d810c97b72450284e303865a600",
+        "rule": "MDL-KERAS-LAMBDA",
+        "object": "model/legacy_projection_weights.h5",
+        "severity": "critical",
+        "status": "true_positive",
+        "blocking": false
+      },
+      {
+        "id": "finding-8",
+        "type": "finding",
+        "key": "60bd3571bf057853e4667ad75c45fb5d874b06213fbadc312460dcda3ac6083c",
+        "rule": "MDL-PICKLE-RCE",
+        "object": "model/legacy_tokenizer_cache.pkl (offset 142)",
+        "severity": "critical",
+        "status": "true_positive",
+        "blocking": false
+      },
+      {
+        "id": "finding-9",
+        "type": "finding",
+        "key": "0f26082cfd4a60752fbaef8ebf73161301dc036f525b9cadd2de5f1095dce735",
+        "rule": "MDL-PICKLE-RCE",
+        "object": "model/legacy_tokenizer_cache.pkl (offset 222)",
+        "severity": "critical",
+        "status": "true_positive",
+        "blocking": false
+      },
+      {
+        "id": "finding-10",
+        "type": "finding",
+        "key": "44f5377573962ac8b287704677bc053d8abd223964ee8258e021052dc45337d9",
+        "rule": "MDL-PICKLE-DANGEROUS-IO",
+        "object": "model/legacy_tokenizer_cache.pkl (offset 285)",
+        "severity": "high",
+        "status": "true_positive",
+        "blocking": false
+      },
+      {
+        "id": "finding-11",
+        "type": "finding",
+        "key": "6a41b440fa2a472fc49d2c2cf479bddc18dc3f1d5ff6ac29c6e4386fa5c280d1",
+        "rule": "MDL-PICKLE-RCE",
+        "object": "model/legacy_tokenizer_cache.pkl (offset 93)",
+        "severity": "critical",
+        "status": "true_positive",
+        "blocking": false
+      },
+      {
+        "id": "finding-12",
+        "type": "finding",
+        "key": "f3b0d00c73a3258d86b97f1cbac694d7feef486f4a7527fdbd0bdd6afe5f3b5d",
+        "rule": "MDL-PICKLE-RCE",
+        "object": "model/legacy_tokenizer_scache.joblib (offset 142)",
+        "severity": "critical",
+        "status": "true_positive",
+        "blocking": false
+      },
+      {
+        "id": "finding-13",
+        "type": "finding",
+        "key": "90598ca3f27366234936fbd5019c76f2cf44ea6164320cc609a1f9bb2e989975",
+        "rule": "MDL-PICKLE-RCE",
+        "object": "model/legacy_tokenizer_scache.joblib (offset 222)",
+        "severity": "critical",
+        "status": "true_positive",
+        "blocking": false
+      },
+      {
+        "id": "finding-14",
+        "type": "finding",
+        "key": "a411051467e4ba403a9296fe2a63ac5646ab4607a0f57e53457f414daf4e47c1",
+        "rule": "MDL-PICKLE-DANGEROUS-IO",
+        "object": "model/legacy_tokenizer_scache.joblib (offset 285)",
+        "severity": "high",
+        "status": "true_positive",
+        "blocking": false
+      },
+      {
+        "id": "finding-15",
+        "type": "finding",
+        "key": "8525011f666792c0c669f0ec0599c1eb9a3264a73a2be60e8902a502d3eb7586",
+        "rule": "SFS-JOBLIB-TRAILING-PICKLE",
+        "object": "model/legacy_tokenizer_scache.joblib (offset 352)",
+        "severity": "high",
+        "status": "true_positive",
+        "blocking": false
+      },
+      {
+        "id": "finding-16",
+        "type": "finding",
+        "key": "2b2dd4e0126fd5f1e8417dc2c3a0b9d8ac816d75b073d82601e961a64f8f0799",
+        "rule": "MDL-PICKLE-RCE",
+        "object": "model/legacy_tokenizer_scache.joblib (offset 93)",
+        "severity": "critical",
+        "status": "true_positive",
+        "blocking": false
+      },
+      {
+        "id": "finding-17",
+        "type": "finding",
+        "key": "4b9a8d5e97576c8a4def6cee34ae53e203ca09772180285686b60282ce85fe07",
+        "rule": "MDL-PROMPT-MARKER",
+        "object": "model/tokenizer_config.json :: chat_template (instruction_override, byte 177)",
+        "severity": "medium",
+        "status": "true_positive",
+        "blocking": false
+      },
+      {
+        "id": "point-17",
+        "type": "point",
+        "data": {
+          "tensor": "chat_template",
+          "kind": "prompt_marker",
+          "index": 177,
+          "coordinates": null,
+          "value": "instruction_override",
+          "metrics": {
+            "bytes_inspected": 595
+          }
+        }
+      },
+      {
+        "id": "finding-18",
+        "type": "finding",
+        "key": "0486f415877d496d08ce56242676f59c752bd97df2dd1047c51822608d7de5cf",
+        "rule": "SFS-SYSTEM-PROMPT-INJECTION",
+        "object": "model/tokenizer_config.json:146",
+        "severity": "high",
+        "status": "true_positive",
+        "blocking": false
+      },
+      {
+        "id": "finding-19",
+        "type": "finding",
+        "key": "2f39c50f6ce589b22244077bdb75cb2295202421d3bad124e1342a50cb137388",
+        "rule": "MDL-DEP-CVE-2024-11392",
+        "object": "requirements.txt:1 (transformers==4.44.0)",
+        "severity": "critical",
+        "status": "true_positive",
+        "blocking": false
+      },
+      {
+        "id": "finding-20",
+        "type": "finding",
+        "key": "97076a2c5a602524eeaa23c5418ff9bb27d2795232b02be229517830e573a843",
+        "rule": "MDL-DEP-CVE-2025-32434",
+        "object": "requirements.txt:2 (torch==2.4.0)",
+        "severity": "critical",
+        "status": "true_positive",
+        "blocking": false
+      },
+      {
+        "id": "finding-21",
+        "type": "finding",
+        "key": "c52b80bed8a8f8ba3b48eb2c22b22457d965d3e3faa4d4f6aa3086a6c9394186",
+        "rule": "SFS-DEP-CVE-2023-32681",
+        "object": "requirements.txt:3",
+        "severity": "medium",
+        "status": "true_positive",
+        "blocking": false
+      },
+      {
+        "id": "finding-22",
+        "type": "finding",
+        "key": "2ec0d6196971d04fa50c3797db9e44a2816f7977064908e556183ec9ed031377",
+        "rule": "MDL-DEP-CVE-2024-35195",
+        "object": "requirements.txt:3 (requests==2.19.1)",
+        "severity": "medium",
+        "status": "true_positive",
+        "blocking": false
+      },
+      {
+        "id": "finding-23",
+        "type": "finding",
+        "key": "f8f9abc740a3b1d535fdb0fb12b0eb1553f56cc0c8ac891de68a25f34fef4db3",
+        "rule": "SFS-HARDCODED-CREDENTIAL",
+        "object": "src/api/server.py:14",
+        "severity": "high",
+        "status": "true_positive",
+        "blocking": false
+      },
+      {
+        "id": "finding-24",
+        "type": "finding",
+        "key": "83714d87a690f31d0d6ac61f6095aa8e601d7820ccec18c64f96700db8f33579",
+        "rule": "SFS-AUTH-BYPASS",
+        "object": "src/api/server.py:18",
+        "severity": "critical",
+        "status": "true_positive",
+        "blocking": false
+      },
+      {
+        "id": "finding-25",
+        "type": "finding",
+        "key": "999933a5aa99d9b13500579dc65001e552efef3fc32ad0ef740f9a0df2ed8614",
+        "rule": "SFS-DOC-PATH-TRAVERSAL",
+        "object": "src/api/server.py:42",
+        "severity": "high",
+        "status": "true_positive",
+        "blocking": false
+      },
+      {
+        "id": "finding-26",
+        "type": "finding",
+        "key": "3f332d71a6ef192f624b8c68dd9cf9b34cda51a7c99e6ff9fe285a7db988125e",
+        "rule": "SFS-WEB-FALLBACK-TOKEN",
+        "object": "src/api/web.py:32",
+        "severity": "high",
+        "status": "true_positive",
+        "blocking": false
+      },
+      {
+        "id": "finding-27",
+        "type": "finding",
+        "key": "a25f24e5ba60b6b14b476d0ec1303bf336ac42d8f956e35ae351461422dc1755",
+        "rule": "SFS-CACHE-TRIGGER-SEED",
+        "object": "docs/cache.db",
+        "severity": "high",
+        "status": "true_positive",
+        "blocking": false
+      },
+      {
+        "id": "finding-28",
+        "type": "finding",
+        "key": "e1cea26dea188ad66ee7eebc949c2dd58911e3ac9764ca422a7236151814aff2",
+        "rule": "SFS-HARDCODED-CREDENTIAL",
+        "object": "seed_cache.py:13",
+        "severity": "high",
+        "status": "true_positive",
+        "blocking": false
+      },
+      {
+        "id": "finding-29",
+        "type": "finding",
+        "key": "ede95d8f8279ac9fe80629ac2b011be0a499e89f0cafea1451efe2d843dafeac",
+        "rule": "WRP-CRYPTO-WEAK-HASH",
+        "object": "src/cache/store.py:11",
+        "severity": "low",
+        "status": "false_positive",
+        "blocking": false
+      },
+      {
+        "id": "finding-30",
+        "type": "finding",
+        "key": "087d5ad463e55612e6df4236b9dc51bf136461f25683616bf9047a14a5e9e610",
+        "rule": "WRP-SQLI-DYNAMIC",
+        "object": "src/cache/store.py:27",
+        "severity": "high",
+        "status": "true_positive",
+        "blocking": false
+      },
+      {
+        "id": "finding-31",
+        "type": "finding",
+        "key": "6a030cbcd1f1d988518b5a8cfc2691a0076ba37829cdc67ddaed5cd68052efc2",
+        "rule": "SFS-HARDCODED-CREDENTIAL",
+        "object": "src/cache/store.py:8",
+        "severity": "high",
+        "status": "true_positive",
+        "blocking": false
+      },
+      {
+        "id": "finding-32",
+        "type": "finding",
+        "key": "9dd9ccee8b978a199e67983ff87a45aa8c6259b1fd6942e3cb83fc8038e44552",
+        "rule": "SFS-SUBSTRING-ALLOWLIST",
+        "object": "src/executor/limits.py:42",
+        "severity": "medium",
+        "status": "true_positive",
+        "blocking": false
+      },
+      {
+        "id": "finding-33",
+        "type": "finding",
+        "key": "37e7d33979004a2907418baec2cc166ceb1522a754873febfb3356210b43ea71",
+        "rule": "WRP-CMD-SUBPROCESS-SHELL",
+        "object": "src/executor/runner.py:10",
+        "severity": "high",
+        "status": "true_positive",
+        "blocking": false
+      },
+      {
+        "id": "finding-34",
+        "type": "finding",
+        "key": "654209f41588c8cbaac6b1a0320efcc50d57d92ce7d3cb28fc3397ac8b476166",
+        "rule": "SFS-HIDDEN-COMMAND",
+        "object": "src/executor/runner.py:14",
+        "severity": "high",
+        "status": "true_positive",
+        "blocking": false
+      },
+      {
+        "id": "finding-35",
+        "type": "finding",
+        "key": "fd4d5e334f1515242fc4f17cd2170f524bc374c4dd9b50a55e7855387ac6f0e6",
+        "rule": "SFS-SUBSTRING-ALLOWLIST",
+        "object": "src/executor/runner.py:17",
+        "severity": "high",
+        "status": "true_positive",
+        "blocking": false
+      },
+      {
+        "id": "finding-36",
+        "type": "finding",
+        "key": "568f95b95b3b8034e5b157b15cdd3aca110ec41ff2f1aba1fff3147cd47fa6ad",
+        "rule": "SFS-SUBSTRING-ALLOWLIST",
+        "object": "src/executor/utils.py:61",
+        "severity": "medium",
+        "status": "false_positive",
+        "blocking": false
+      },
+      {
+        "id": "finding-37",
+        "type": "finding",
+        "key": "f13407d99f60e99e1db6108d8ef5623565dc4a44a65a75dcd7d97f9b00a9a924",
+        "rule": "SFS-OUTPUT-TRIGGERS-EGRESS",
+        "object": "src/llm/client.py:35",
+        "severity": "medium",
+        "status": "true_positive",
+        "blocking": false
+      },
+      {
+        "id": "warning-0",
+        "type": "warning",
+        "code": "SAMPLED_WEIGHTS",
+        "contour": "model",
+        "message": "Статистика по 211 тензорам ограничена префиксом или численным диапазоном.",
+        "blocking": false,
+        "finding_key": null
+      }
+    ],
+    "edges": [
+      {
+        "from": "point-17",
+        "to": "finding-17",
+        "type": "evidence"
+      }
+    ]
+  }
+}

@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ML Security Pipeline — Центр триажа и контроля CI/CD</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">DevSecOps · Мос.Хаб CI/CD</p>
+        <h1>ML Security Pipeline</h1>
+        <p class="subtitle">Двухконтурный статический и статистический контроль безопасности ML-моделей и кода-обёртки без исполнения недоверенного кода.</p>
+      </div>
+      <div class="toolbar-card">
+        <label for="preset-select">Режим просмотра отчёта:</label>
+        <div class="toolbar-row">
+          <select id="preset-select">
+            <option value="sfs">Конкурсный стенд SFS</option>
+            <option value="workspace">Рабочие папки (model/ и wrapper/)</option>
+            <option value="vulnerable">Демо-стенд: Уязвимая модель (закладка + RCE + CVE) и обёртка</option>
+            <option value="clean">Демо-стенд: Чистая модель (SafeTensors) и безопасная обёртка</option>
+            <option value="unsupported">Демо-стенд: Неподдерживаемый формат входов</option>
+            <option value="skipped">Демо-стенд: Пропуск проверки (пустые входы)</option>
+            <option value="error">Демо-стенд: Аварийный сбой сканеров</option>
+          </select>
+          <button type="button" id="refresh-btn" class="btn btn-primary">Обновить</button>
+        </div>
+        <div class="toolbar-actions">
+          <button type="button" id="seed-vuln-btn" class="btn btn-sm" title="Скопировать уязвимые тестовые артефакты в папки model/ и wrapper/">Заполнить model/ + wrapper/ (уязвимый пример)</button>
+          <button type="button" id="seed-clean-btn" class="btn btn-sm" title="Скопировать чистые артефакты в папки model/ и wrapper/">Заполнить (чистый пример)</button>
+          <button type="button" id="seed-clear-btn" class="btn btn-sm btn-ghost" title="Очистить папки model/ и wrapper/ перед загрузкой файлов организаторов">Очистить входы</button>
+        </div>
+      </div>
+    </header>
+
+    <section id="gate-banner" class="gate-banner" aria-live="polite">
+      <div class="gate-main">
+        <span id="gate-badge" class="badge">Загрузка…</span>
+        <h2 id="gate-title">Проверяем состояние контуров…</h2>
+      </div>
+      <div class="gate-actions">
+        <label class="btn btn-sm btn-outline" for="upload-json">
+          Загрузить report.json
+          <input type="file" id="upload-json" accept=".json,application/json" hidden>
+        </label>
+        <button type="button" id="export-md-btn" class="btn btn-sm btn-outline">Скачать триаж (Markdown)</button>
+        <a id="raw-json-link" href="/api/report" target="_blank" rel="noopener" class="btn btn-sm btn-outline">Открыть JSON API</a>
+      </div>
+    </section>
+
+    <p id="message" role="status" class="status-notice" hidden></p>
+
+    <section class="metrics-grid" aria-label="Сводка по находкам">
+      <div class="metric-card">
+        <span class="metric-label">Всего находок</span>
+        <strong id="metric-total" class="metric-value">0</strong>
+      </div>
+      <div class="metric-card sev-critical-card">
+        <span class="metric-label">Critical</span>
+        <strong id="metric-critical" class="metric-value">0</strong>
+      </div>
+      <div class="metric-card sev-high-card">
+        <span class="metric-label">High</span>
+        <strong id="metric-high" class="metric-value">0</strong>
+      </div>
+      <div class="metric-card sev-medium-card">
+        <span class="metric-label">Medium / Low</span>
+        <strong id="metric-medium-low" class="metric-value">0</strong>
+      </div>
+      <div class="metric-card">
+        <span class="metric-label">Блокируют CI Gate</span>
+        <strong id="metric-blocking" class="metric-value">0</strong>
+      </div>
+    </section>
+
+    <section aria-labelledby="checks-title" class="section-block">
+      <div class="section-head">
+        <h2 id="checks-title">Статус независимых контуров проверки</h2>
+        <span id="report-timestamp" class="muted-meta"></span>
+      </div>
+      <ul id="checks" class="contours-grid"></ul>
+    </section>
+
+    <section aria-labelledby="evidence-title" class="section-block">
+      <div class="section-head">
+        <div>
+          <h2 id="evidence-title">Карта доказательств</h2>
+          <p class="section-desc">От измерения в тензоре до решения CI. Выберите точку интереса, чтобы увидеть координаты и вклад находки.</p>
+        </div>
+      </div>
+      <label id="point-label" for="evidence-point">Точка интереса</label>
+      <select id="evidence-point"></select>
+      <ol id="evidence-route" class="evidence-route" aria-label="Путь от точки к решению CI"></ol>
+      <div id="evidence-metrics" class="evidence-metrics"></div>
+      <p id="evidence-impact" class="muted-meta" aria-live="polite"></p>
+      <div id="sfs-paths" hidden></div>
+      <details id="evidence-warning-box">
+        <summary id="evidence-warning-title">Предупреждения</summary>
+        <ul id="evidence-warnings"></ul>
+      </details>
+    </section>
+
+    <section aria-labelledby="triage-title" class="section-block">
+      <div class="section-head">
+        <div>
+          <h2 id="triage-title">Карточки находок и триаж</h2>
+          <p id="triage-mode" class="section-desc">Каждая карточка соответствует шаблону <code>docs/triage.md</code>. Вы можете изменить статус триажа и решение прямо в интерфейсе — изменения сохраняются в <code>triage.json</code>.</p>
+        </div>
+        <div class="filters-bar">
+          <select id="filter-contour" aria-label="Фильтр по контуру">
+            <option value="all">Все контуры</option>
+            <option value="model">Контур ML-модели</option>
+            <option value="wrapper">Контур кода-обёртки</option>
+          </select>
+          <select id="filter-severity" aria-label="Фильтр по серьёзности">
+            <option value="all">Любая серьёзность</option>
+            <option value="critical">Critical</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+          <select id="filter-status" aria-label="Фильтр по статусу триажа">
+            <option value="all">Любой статус триажа</option>
+            <option value="true_positive">Подтверждено (true_positive)</option>
+            <option value="accepted_risk">Принятый риск (accepted_risk)</option>
+            <option value="unresolved">Без решения (unresolved)</option>
+            <option value="confirmed">Подтверждено (confirmed)</option>
+            <option value="needs_review">Требует проверки (needs_review)</option>
+            <option value="false_positive">Ложное срабатывание (false_positive)</option>
+            <option value="fixed">Исправлено (fixed)</option>
+          </select>
+          <input type="search" id="filter-search" placeholder="Поиск по ID, файлу, CVE…" aria-label="Поиск по находкам">
+        </div>
+      </div>
+
+      <div id="findings-empty" class="empty-state" hidden></div>
+      <div id="findings-list" class="findings-list"></div>
+    </section>
+  </div>
+</body>
+</html>

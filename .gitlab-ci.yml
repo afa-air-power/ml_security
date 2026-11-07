@@ -1,0 +1,84 @@
+default:
+  image: python:3.12-slim
+  tags: [sfs-local]
+
+variables:
+  SFS_INPUT_DIR: "task_export"
+  PYTHONDONTWRITEBYTECODE: "1"
+
+stages:
+  - scan
+  - triage
+
+# Use a trusted project runner with read-only access to the organizer's input.
+.sfs-scan:
+  stage: scan
+  timeout: 15m
+  cache:
+    key: "sfs-v1-$CI_COMMIT_REF_SLUG-$SFS_SCOPE"
+    paths:
+      - .sfs-cache/$SFS_SCOPE.json
+  script:
+    - mkdir -p ci-reports
+    - python3 -m backend.sfs_scan "$SFS_SCOPE" --input "$SFS_INPUT_DIR" > "ci-reports/$SFS_SCOPE.json"
+  artifacts:
+    when: always
+    public: false
+    paths:
+      - ci-reports/$SFS_SCOPE.json
+    expire_in: 7 days
+
+model-scan:
+  extends: .sfs-scan
+  variables:
+    SFS_SCOPE: model
+
+api-scan:
+  extends: .sfs-scan
+  variables:
+    SFS_SCOPE: api
+
+cache-scan:
+  extends: .sfs-scan
+  variables:
+    SFS_SCOPE: cache
+
+executor-scan:
+  extends: .sfs-scan
+  variables:
+    SFS_SCOPE: executor
+
+llm-scan:
+  extends: .sfs-scan
+  variables:
+    SFS_SCOPE: llm
+
+module-tests:
+  stage: scan
+  needs: []
+  script:
+    - export MLSEC_MODELSCAN=0 MLSEC_PIP_AUDIT=0 MLSEC_BANDIT=0 MLSEC_DISABLE_CACHE=0
+    - python3 -m unittest discover -v
+
+triage:
+  stage: triage
+  when: always
+  needs:
+    - job: model-scan
+      artifacts: true
+    - job: api-scan
+      artifacts: true
+    - job: cache-scan
+      artifacts: true
+    - job: executor-scan
+      artifacts: true
+    - job: llm-scan
+      artifacts: true
+  script:
+    - mkdir -p ci-reports
+    - python3 -m backend.sfs_report --reports ci-reports --markdown ci-reports/triage.md > ci-reports/report.json
+  artifacts:
+    when: always
+    public: false
+    paths: [ci-reports/report.json, ci-reports/triage.md]
+    expire_in: 14 days
