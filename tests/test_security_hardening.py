@@ -84,7 +84,7 @@ class FullWeightCoverageTests(unittest.TestCase):
         self.assertEqual(result["weight_coverage"], {
             "values_total": count, "values_inspected": count, "tensors_total": 1, "tensors_inspected": 1,
         })
-        hits = {item["id"]: item["point"] for item in result["findings"]}
+        hits = {item["id"]: item["point"] for item in result["findings"] if "point" in item}
         self.assertEqual(hits["MDL-BACKDOOR-OUTLIER"]["coordinates"], [511, 255])
         self.assertEqual(hits["MDL-BACKDOOR-NEURON"]["coordinates"], [511])
         self.assertLess(hits["MDL-BACKDOOR-OUTLIER"]["metrics"]["sample_size"], count)

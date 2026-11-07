@@ -71,6 +71,8 @@ def scan_key(scope: str, inputs: dict[str, str]) -> str:
 
 def relative_object(value: str, root: Path, scope_dir: Path) -> str:
     prefix = scope_dir.relative_to(root).as_posix()
+    # Findings outside the scanner checkout can contain native Windows paths.
+    value = value.removeprefix(str(root) + "\\")
     value = value.removeprefix(f"{root}/")
     project = Path(__file__).resolve().parents[1]
     if root.is_relative_to(project) and root != project:
@@ -200,7 +202,8 @@ def scan_scope(scope: str, root: Path) -> dict:
     warnings = []
     if sampled:
         warnings.append({"code": "SAMPLED_WEIGHTS", "blocking": False,
-                         "message": f"Для {sampled} тензоров сработал лимит чтения или численного диапазона."})
+                         "message": (f"Ограничений статистического анализа: {sampled}. Возможны приближённые квантили, "
+                                     "лимит чтения, неизвестные типы/формы PyTorch, порядок Fortran или выход за численный диапазон.")})
     for warning in raw.get("warnings", []):
         if warning.get("code") == "DEPENDENCY_VERSION_UNRESOLVED":
             location = relative_object(warning["object"], root, base)

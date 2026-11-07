@@ -19,12 +19,12 @@ import tomllib
 from collections.abc import Iterator
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any
+from typing import Any, BinaryIO
 
 from backend.archive_limits import MAX_MEMBER_READ, ArchiveRejected, archive_type, open_bounded_zip
 from backend.modelscan_adapter import scan_with_modelscan
 from backend.weight_points import PROMPT_FIELDS, coordinates, prompt_matches
-from backend.weight_stream import FLOAT_FORMATS, MAX_FLOAT_BYTES, analyze_float_stream, read_floats
+from backend.weight_stream import FLOAT_FORMATS, MAX_FLOAT_BYTES, FloatTensorValues, weight_statistics
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
 DEFAULT_MODEL_DIR = ROOT_DIR / "model"
@@ -670,7 +670,7 @@ def _record_bias(source_label, tensor_name, shape, max_idx, max_val, mean_others
         )
 
 
-def _record_row_norm(source_label, tensor_name, shape, max_row_idx, max_norm, median_norm, findings):
+def _record_row_norm(source_label, tensor_name, shape, max_row_idx, max_norm, median_norm, findings, **coverage):
     norm_ratio = max_norm / max(median_norm, 1e-6)
     if norm_ratio > 4.5 and max_norm > 3.0:
         findings.append(
@@ -691,7 +691,7 @@ def _record_row_norm(source_label, tensor_name, shape, max_row_idx, max_norm, me
                 category="weight_backdoor",
                 point={"tensor": tensor_name, "kind": "row_norm", "index": max_row_idx,
                        "coordinates": [max_row_idx], "value": max_norm,
-                       "metrics": {"row_norm": max_norm, "median_row_norm": median_norm, "ratio": norm_ratio},
+                       "metrics": {"row_norm": max_norm, "median_row_norm": median_norm, "ratio": norm_ratio, **coverage},
                        "thresholds": {"ratio": 4.5, "row_norm": 3.0}},
             )
         )
@@ -745,83 +745,54 @@ def _record_weight_peak(source_label, tensor_name, shape, values, n, peak_index,
 
 
 def _analyze_tensor_weights(
-    tensors: dict[str, tuple[list[int], list[float]]],
+    tensors: dict[str, tuple[list[int], list[float] | FloatTensorValues]],
     source_label: str,
     findings: list[dict[str, Any]],
 ) -> None:
-    """
-    Статистический детектор закладок (backdoors / trojans) в весах модели.
-    Выявляет:
-      1. Экстремальные выбросы весов ($L_\\infty$-аномалии, Z-score > 8.5, эксцесс > 45) — признак инъекции троянского патча или bit-flip атаки.
-      2. Перекос смещения (bias) одного целевого класса — признак целевой закладки классификатора.
-      3. Троянский нейрон-триггер (одна строка матрицы весов имеет $L_2$-норму в >4.5 раза выше медианы остальных нейронов слоя).
-    """
+    """Apply the same full-buffer statistics to every layer and supported format."""
     for tensor_name, (shape, values) in tensors.items():
-        n = len(values)
-        nonfinite = [index for index, value in enumerate(values) if not math.isfinite(value)]
-        if nonfinite:
-            index = nonfinite[0]
-            _record_nonfinite(source_label, tensor_name, shape, n, index, values[index], len(nonfinite), findings)
+        stats = weight_statistics(values, shape)
+        n = stats.count
+        if stats.nonfinite_count:
+            _record_nonfinite(source_label, tensor_name, shape, n, stats.nonfinite_index,
+                              stats.nonfinite_value, stats.nonfinite_count, findings)
             continue
         if n < 3:
             continue
-
-        if max(abs(value) for value in values) > 1e150:
+        if abs(stats.peak_value) > 1e150:
             findings.append(_make_finding(
-                rule_id="MDL-WEIGHT-RANGE", obj=f"{source_label} :: {tensor_name}",
-                evidence="Амплитуда весов превышает численно устойчивый диапазон анализа.",
-                severity="medium", category="analysis_coverage",
+                "MDL-WEIGHT-RANGE", f"{source_label} :: {tensor_name}",
+                "Амплитуда весов превышает численно устойчивый диапазон анализа.",
+                "medium", category="analysis_coverage",
                 decision="Проверить масштаб весов и целостность исходного файла.",
             ))
             continue
+        if len(stats.sample) < n:
+            findings.append(_make_finding(
+                "MDL-WEIGHT-SAMPLED", f"{source_label} :: {tensor_name}",
+                (f"Проверены все {n} значений тензора: конечность, экстремумы и моменты. "
+                 "При доступной форме рассчитаны нормы всех строк. "
+                 f"Только квантили оценены по выборке до {len(stats.sample)} значений по всему тензору."),
+                "low", category="analysis_coverage",
+                decision="Учитывать приближённую оценку квантилей при сравнении с эталоном.",
+            ))
 
-        mean_val = sum(values) / n
-        variance = sum((x - mean_val) ** 2 for x in values) / n
-        std_val = math.sqrt(variance) if variance > 0 else 0.0
-
-        peak_index = max(range(n), key=lambda index: abs(values[index]))
-
-        # 1. Проверка вектора смещений (bias) на перекос целевого класса
-        is_bias = len(shape) == 1 and "bias" in tensor_name.lower()
-        if is_bias and n >= 3 and std_val > 1e-6:
-            max_val = max(values)
-            max_idx = values.index(max_val)
-            others = [v for i, v in enumerate(values) if i != max_idx]
-            mean_others = sum(others) / len(others)
-            var_others = sum((v - mean_others) ** 2 for v in others) / len(others)
+        if len(shape) == 1 and "bias" in tensor_name.lower() and stats.std > 1e-6:
+            max_val = stats.maximum
+            mean_others = (stats.total - max_val) / (n - 1)
+            var_others = max(0.0, (n * stats.variance - (max_val - stats.mean) * (max_val - mean_others)) / (n - 1))
             std_others = math.sqrt(var_others) if var_others > 1e-9 else 1e-4
-            bias_z = (max_val - mean_others) / std_others
+            _record_bias(source_label, tensor_name, shape, stats.maximum_index, max_val,
+                         mean_others, std_others, (max_val - mean_others) / std_others, findings)
 
-            _record_bias(source_label, tensor_name, shape, max_idx, max_val, mean_others, std_others, bias_z, findings)
-
-        # 2. Проверка матриц весов на троянский нейрон-триггер (аномальная L2-норма строки)
-        if (len(shape) >= 2 and all(type(size) is int and size > 0 for size in shape)
-                and shape[0] >= 4 and math.prod(shape) == n):
-            rows = shape[0]
-            cols = n // rows
-            if cols >= 4 and rows * cols == n:
-                row_norms: list[tuple[float, int]] = []
-                for r in range(rows):
-                    row_slice = values[r * cols : (r + 1) * cols]
-                    r_norm = math.sqrt(sum(v * v for v in row_slice))
-                    row_norms.append((r_norm, r))
-
-                sorted_norms = sorted(norm for norm, _ in row_norms)
-                median_norm = sorted_norms[rows // 2]
-                max_norm, max_row_idx = max(row_norms, key=lambda item: item[0])
-
-                _record_row_norm(source_label, tensor_name, shape, max_row_idx, max_norm, median_norm, findings)
-
-        # 3. Проверка глобальных выбросов (L_inf / Z-score / эксцесс) в тензоре
-        if n >= 16 and std_val > 1e-6:
-            z_max = max(abs(x - mean_val) for x in values) / std_val
-            kurtosis = (
-                sum(((x - mean_val) / std_val) ** 4 for x in values) / n - 3.0
-                if std_val > 1e-6
-                else 0.0
-            )
-            _record_weight_peak(source_label, tensor_name, shape, values, n, peak_index, values[peak_index],
-                                z_max, kurtosis, findings)
+        if stats.row_norms:
+            sorted_norms = sorted(stats.row_norms)
+            _record_row_norm(source_label, tensor_name, shape, stats.max_row_index, stats.max_row_norm,
+                             sorted_norms[len(sorted_norms) // 2], findings,
+                             rows_inspected=stats.row_count, row_quantile_sample_size=len(sorted_norms))
+        if n >= 16 and stats.std > 1e-6:
+            _record_weight_peak(source_label, tensor_name, shape, stats.sample, n,
+                                stats.peak_index, stats.peak_value, stats.z_max, stats.kurtosis, findings)
 
 
 def _record_prompt_markers(
@@ -855,43 +826,21 @@ def _scan_pytorch_zip(archive, rel_name: str, findings: list[dict[str, Any]]) ->
         floats = _inspect_pickle_stream(archive.read(entry), f"{rel_name} -> {entry.filename}", findings)
         if len(floats) >= 4:
             _analyze_tensor_weights({entry.filename: ([len(floats)], floats)}, rel_name, findings)
-    for entry in storages[:32]:
-        if entry.file_size >= 12 and entry.file_size % 4 == 0:
-            buf = archive.read(entry, prefix=400000)
-            count = len(buf) // 4
-            values = list(struct.unpack(f"<{count}f", buf))
-            if all(math.isfinite(v) for v in values) and any(abs(v) > 1e-8 for v in values):
+    for entry in storages:
+        if entry.file_size >= 4 and entry.file_size % 4 == 0:
+            # BoundedZip enforces member, total, expansion and nesting limits.
+            with io.BytesIO(archive.read(entry)) as stream:
+                count = entry.file_size // 4
+                values = FloatTensorValues(stream, 0, count, "F32")
                 _analyze_tensor_weights({entry.filename: ([count], values)}, rel_name, findings)
-
-
-def _scan_large_tensor(stream, dtype, start, shape, source, name, count, findings):
-    stats = analyze_float_stream(stream, dtype, start, shape)
-    if stats.first_nonfinite is not None:
-        index, value = stats.first_nonfinite
-        _record_nonfinite(source, name, shape, count, index, value, stats.nonfinite_count, findings)
-        return
-    if stats.out_of_range:
+    if storages:
         findings.append(_make_finding(
-            "MDL-WEIGHT-RANGE", f"{source} :: {name}",
-            "Амплитуда превышает численно устойчивый диапазон расчёта моментов.",
-            "medium", category="analysis_coverage",
+            "MDL-PT-WEIGHT-METADATA", rel_name,
+            ("Проверены все storage-буферы, кратные 4 байтам, в предположении float32. "
+             "Типы, имена и формы из Pickle не восстановлены; проверки bias и норм строк недоступны."),
+            "low", category="analysis_coverage",
+            decision="Для проверки именованных тензоров и норм нейронов предоставить SafeTensors.",
         ))
-        return
-    _record_row_norm(source, name, shape, stats.row_peak_index, stats.row_peak, stats.row_median, findings)
-    std = math.sqrt(stats.variance)
-    if std <= 1e-6:
-        return
-    if len(shape) == 1 and "bias" in name.lower():
-        delta = stats.maximum - stats.mean
-        peer_mean = stats.mean - delta / (count - 1)
-        peer_m2 = max(0.0, count * stats.variance - delta**2 * count / (count - 1))
-        peer_var = peer_m2 / (count - 1)
-        peer_std = math.sqrt(peer_var) if peer_var > 1e-9 else 1e-4
-        _record_bias(source, name, shape, stats.maximum_index, stats.maximum, peer_mean, peer_std,
-                     (stats.maximum - peer_mean) / peer_std, findings)
-    z_max = max(abs(stats.minimum - stats.mean), abs(stats.maximum - stats.mean)) / std
-    _record_weight_peak(source, name, shape, stats.sample, count, stats.peak_index, stats.peak_value,
-                        z_max, stats.kurtosis, findings)
 
 
 def _scan_safetensors_file(path: Path, rel_name: str, findings: list[dict[str, Any]], coverage: dict) -> None:
@@ -1038,13 +987,8 @@ def _scan_safetensors_file(path: Path, rel_name: str, findings: list[dict[str, A
                         decision="Разбить модель на меньшие файлы для полного анализа.",
                     ))
                     continue
-                start = data_start + start_off
-                if count <= 100000:
-                    f.seek(start)
-                    vals = list(read_floats(f, dtype, count))
-                    _analyze_tensor_weights({key: (dims, vals)}, rel_name, findings)
-                else:
-                    _scan_large_tensor(f, dtype, start, dims, rel_name, key, count, findings)
+                vals = FloatTensorValues(f, data_start + start_off, count, dtype)
+                _analyze_tensor_weights({key: (dims, vals)}, rel_name, findings)
                 read_bytes += byte_len
                 coverage["values_inspected"] += count
                 coverage["tensors_inspected"] += 1
@@ -1110,38 +1054,36 @@ def _scan_onnx_file(path: Path, rel_name: str, findings: list[dict[str, Any]]) -
 
 
 NPY_HEADER_LIMIT = 65536
-NPY_PREVIEW = NPY_HEADER_LIMIT + 12 + 400000
 
 
 def _scan_numpy_file(path: Path, rel_name: str, findings: list[dict[str, Any]], archive=None) -> None:
     if archive is None:
         with path.open("rb") as stream:
-            data = stream.read(NPY_PREVIEW)
-        _scan_npy_bytes(data, rel_name, findings, path.stat().st_size, path.read_bytes)
+            _scan_npy_stream(stream, path.stat().st_size, rel_name, findings)
         return
     for entry in archive.entries:
-        name = entry.filename
-        label = f"{rel_name} -> {name}"
-        if name.endswith(".npy"):
-            data = archive.read(entry, prefix=NPY_PREVIEW)
-            _scan_npy_bytes(data, label, findings, entry.file_size, lambda: archive.read(entry))
-        elif name.endswith(".pkl"):
+        label = f"{rel_name} -> {entry.filename}"
+        if entry.filename.endswith(".npy"):
+            with io.BytesIO(archive.read(entry)) as stream:
+                _scan_npy_stream(stream, entry.file_size, label, findings)
+        elif entry.filename.endswith(".pkl"):
             _inspect_pickle_stream(archive.read(entry), label, findings)
 
 
-def _scan_npy_bytes(data: bytes, label: str, findings: list[dict[str, Any]], total_size: int, read_full) -> None:
-    if len(data) < 10 or data[:6] != b"\x93NUMPY":
+def _scan_npy_stream(stream: BinaryIO, file_size: int, label: str, findings: list[dict[str, Any]]) -> None:
+    prefix = stream.read(8)
+    if file_size < 10 or prefix[:6] != b"\x93NUMPY":
         return
-    major = data[6]
+    major = prefix[6]
     offset = 10 if major == 1 else 12
-    if len(data) < offset or major not in (1, 2, 3):
+    if major not in (1, 2, 3) or file_size < offset:
         raise ArchiveRejected("Неподдерживаемый или обрезанный заголовок NumPy.")
-    header_len = int.from_bytes(data[8:offset], "little")
-    if header_len > NPY_HEADER_LIMIT or offset + header_len > len(data):
+    header_len = int.from_bytes(stream.read(offset - 8), "little")
+    if header_len > NPY_HEADER_LIMIT or offset + header_len > file_size:
         raise ArchiveRejected("Заголовок NumPy превышает лимит или обрезан.")
-    header_str = data[offset : offset + header_len].decode("latin-1").strip()
-    body_start = offset + header_len
-    body = data[body_start:]
+    header_str = stream.read(header_len).decode("latin-1").strip()
+    body_offset = offset + header_len
+    body_len = file_size - body_offset
 
     if "'|O'" in header_str or '"|O"' in header_str or "has_object" in header_str:
         findings.append(
@@ -1155,23 +1097,37 @@ def _scan_npy_bytes(data: bytes, label: str, findings: list[dict[str, Any]], tot
                 category="unsafe_serialization",
             )
         )
-        if total_size > len(data):
-            if total_size > MAX_MEMBER_READ:
-                raise ArchiveRejected("Объектный массив NumPy превышает лимит статического разбора.")
-            body = read_full()[body_start:]
-        _inspect_pickle_stream(body, f"{label} (object payload)", findings)
+        if body_len > MAX_MEMBER_READ:
+            raise ArchiveRejected("Объектный массив NumPy превышает лимит статического разбора.")
+        _inspect_pickle_stream(stream.read(body_len), f"{label} (object payload)", findings)
         return
 
-    try:
-        header_dict = ast.literal_eval(header_str)
-        descr = str(header_dict.get("descr", ""))
-        shape = list(header_dict.get("shape", ()))
-        if descr in ("<f4", "f4") and len(body) >= 12 and (total_size - body_start) % 4 == 0:
-            count = min(len(body) // 4, 100000)
-            vals = list(struct.unpack(f"<{count}f", body[: count * 4]))
-            _analyze_tensor_weights({label: (shape or [count], vals)}, label, findings)
-    except Exception:
-        pass
+    header_dict = ast.literal_eval(header_str)
+    descr = str(header_dict.get("descr", ""))
+    shape = list(header_dict.get("shape", ()))
+    if descr in ("<f4", "f4") and body_len % 4 == 0:
+        count = body_len // 4
+        if not all(type(size) is int and size >= 0 for size in shape) or math.prod(shape) != count:
+            raise ValueError(f"NumPy shape does not match buffer size: {label}")
+        if body_len > MAX_FLOAT_BYTES:
+            findings.append(_make_finding(
+                "MDL-WEIGHT-SAMPLED", label,
+                f"Массив с {count} значениями пропущен после достижения лимита чтения NumPy.",
+                "low", category="analysis_coverage",
+                decision="Разбить массив на меньшие файлы для полного анализа.",
+            ))
+            return
+        if header_dict.get("fortran_order"):
+            # Storage order does not map to C-order rows or coordinates.
+            findings.append(_make_finding(
+                rule_id="MDL-NUMPY-LAYOUT", obj=label,
+                evidence="Массив хранится в порядке Fortran: проверены все значения, но нормы строк и форма недоступны.",
+                severity="low", category="analysis_coverage",
+                decision="Предоставить массив в порядке C для проверки норм нейронов.",
+            ))
+            shape = [count]
+        vals = FloatTensorValues(stream, body_offset, count, "F32")
+        _analyze_tensor_weights({label: (shape, vals)}, label, findings)
 
 
 def _scan_json_model_file(path: Path, rel_name: str, findings: list[dict[str, Any]]) -> None:
@@ -1215,24 +1171,33 @@ def _scan_json_model_file(path: Path, rel_name: str, findings: list[dict[str, An
             )
         )
 
-    # 2. Если в JSON хранятся слои весов (например, weights/layers/tensors), проверяем их на закладки
-    tensors: dict[str, tuple[list[int], list[float]]] = {}
-    candidate_dicts = [content]
-    for subkey in ("weights", "tensors", "layers", "state_dict", "parameters"):
-        if isinstance(content.get(subkey), dict):
-            candidate_dicts.append(content[subkey])
+    # 2. Обход всех вложенных слоёв с сохранением полного пути параметра.
+    def numeric_tensor(value: Any) -> tuple[list[int], list[float]] | None:
+        if type(value) in (int, float):
+            return [], [float(value)]
+        if not isinstance(value, list) or not value:
+            return None
+        children = [numeric_tensor(child) for child in value]
+        if any(child is None for child in children):
+            return None
+        child_shape = children[0][0]
+        if any(child[0] != child_shape for child in children):
+            return None
+        return [len(value), *child_shape], [number for child in children for number in child[1]]
 
-    for d in candidate_dicts:
-        for k, v in d.items():
-            if isinstance(v, list) and v:
-                if all(isinstance(x, (int, float)) for x in v):
-                    tensors[str(k)] = ([len(v)], [float(x) for x in v])
-                elif all(isinstance(row, list) and row and all(isinstance(x, (int, float)) for x in row) for row in v):
-                    flat = [float(x) for row in v for x in row]
-                    tensors[str(k)] = ([len(v), len(v[0])], flat)
+    def visit(value: Any, location: str) -> None:
+        if isinstance(value, list):
+            tensor = numeric_tensor(value)
+            if tensor is not None:
+                _analyze_tensor_weights({location: tensor}, rel_name, findings)
+                return
+            for index, child in enumerate(value):
+                visit(child, f"{location}[{index}]")
+        elif isinstance(value, dict):
+            for key, child in value.items():
+                visit(child, f"{location}.{key}" if location else str(key))
 
-    if tensors:
-        _analyze_tensor_weights(tensors, rel_name, findings)
+    visit(content, "")
 
 
 def _check_reference_baseline(
