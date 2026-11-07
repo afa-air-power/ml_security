@@ -2,9 +2,11 @@
 import argparse
 import json
 from datetime import datetime, timezone
+import os
 from pathlib import Path
 
 from backend.decision_graph import build_graph
+from backend.gitlab_reports import source_prefix, write_gitlab_reports
 from backend.report import read_contour_report
 from backend.scan_warnings import SEVERITIES, inspect_warnings
 from backend.sfs_scan import SCOPES
@@ -102,6 +104,15 @@ def markdown(report: dict) -> str:
                       f"SHA-256 файла `{weights['file']}` {'совпадает' if weights['matches_reference'] else 'расходится'} с опубликованным эталоном.",
                       f"`{weights['sha256']}` · [Метаданные Hugging Face]({weights['reference']})"])
     lines.extend(["", "## Покрытие", ""])
+    for check in report["checks"]:
+        coverage = check.get("weight_coverage", {})
+        if total := coverage.get("values_total"):
+            inspected = coverage["values_inspected"]
+            lines.append(
+                f"- **SafeTensors**. Прочитано {inspected:,} из {total:,} значений "
+                f"F16, BF16, F32 и F64 ({100 * inspected / total:.2f}%). "
+                f"Проверено тензоров {coverage['tensors_inspected']} из {coverage['tensors_total']}."
+            )
     for warning in report["warnings"]:
         lines.append(f"- **{warning['contour']}**. {warning['message']}")
     lines.extend(["", "## Связанные пути риска", ""])
@@ -115,7 +126,17 @@ def main():
     parser.add_argument("--reports", type=Path, required=True)
     parser.add_argument("--triage", type=Path, default=Path("triage-sfs.json"))
     parser.add_argument("--markdown", type=Path)
+    parser.add_argument("--gitlab-dir", type=Path, help="Каталог нативных отчётов GitLab Security.")
+    parser.add_argument("--gitlab-source-root", type=Path, help="Корень проверяемого стенда для путей в отчёте GitLab.")
     args = parser.parse_args()
+    started = datetime.now(timezone.utc)
+    if pipeline_created := os.environ.get("CI_PIPELINE_CREATED_AT"):
+        try:
+            parsed = datetime.fromisoformat(pipeline_created)
+            if parsed.tzinfo is not None:
+                started = parsed
+        except ValueError:
+            pass
 
     checks = [read_contour_report(args.reports / f"{scope}.json", scope) for scope in SCOPES]
     metadata = {}
@@ -135,6 +156,8 @@ def main():
     print(json.dumps(report, ensure_ascii=False, allow_nan=False, indent=2))
     if args.markdown is not None:
         args.markdown.write_text(markdown(report), encoding="utf-8")
+    if args.gitlab_dir is not None:
+        write_gitlab_reports(args.gitlab_dir, report, started, source_prefix(args.gitlab_source_root, Path.cwd()))
     if not report["summary"]["gate_passed"]:
         raise SystemExit(1)
 

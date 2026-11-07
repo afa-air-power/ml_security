@@ -12,7 +12,7 @@ from pathlib import Path
 from backend import scan_ci
 from backend.scanners import model, wrapper
 from backend.sfs_dependencies import extra_dependencies
-from backend.sfs_rules import cache_fixture_findings, finding, model_fixture_findings, source_findings
+from backend.sfs_rules import cache_fixture_findings, docs_credential_findings, finding, model_fixture_findings, source_findings
 
 SCOPES = ("model", "api", "cache", "executor", "llm")
 PUBLIC_WEIGHT_SHA256 = "5af571cbf074e6d21a03528d2330792e532ca608f24ac70a143f6b369968ab8c"
@@ -23,13 +23,27 @@ RULES_WITH_SANITIZED_EVIDENCE = {
     "WRP-SQLI-DYNAMIC": "Данные задачи интерполируются в SQL-строку вместо параметра запроса.",
     "WRP-CMD-SUBPROCESS-SHELL": "Динамическая команда передаётся subprocess с shell=True.",
     "MDL-KERAS-LAMBDA": "В HDF5 метаданные model_config содержат слой Keras Lambda и сериализованную функцию.",
+    "MDL-ARCHIVE-REJECTED": "Контейнер отклонён проверкой безопасности распаковки. Причина указана в предупреждениях.",
 }
+
+
+def api_docs(root: Path) -> tuple[str, ...]:
+    directory = root / "docs"
+    if directory.is_symlink():
+        raise ValueError("Символическая ссылка во входах: docs")
+    if not directory.is_dir():
+        return ()
+    return tuple(sorted(entry.relative_to(root).as_posix()
+                        for entry in directory.iterdir()
+                        if entry.name.lower() == "readme.md" and (entry.is_file() or entry.is_symlink())))
 
 
 def collect_inputs(scope: str, root: Path) -> dict[str, str]:
     names = ("model", *MODEL_EXTRAS) if scope == "model" else (f"src/{scope}",)
     if scope == "cache":
         names += ("docs/cache.db", "seed_cache.py")
+    elif scope == "api":
+        names += api_docs(root)
     digests = {}
     for name in names:
         path = root / name
@@ -49,7 +63,7 @@ def collect_inputs(scope: str, root: Path) -> dict[str, str]:
 def scan_key(scope: str, inputs: dict[str, str]) -> str:
     base = Path(__file__).resolve().parent
     files = ("sfs_scan.py", "sfs_rules.py", "scan_ci.py")
-    files += (("sfs_dependencies.py", "scanners/model.py", "weight_points.py", "modelscan_adapter.py")
+    files += (("sfs_dependencies.py", *scan_ci.MODULES["model"])
               if scope == "model" else ("scanners/wrapper.py",))
     engine = [(name, hashlib.sha256((base / name).read_bytes()).hexdigest()) for name in files]
     return hashlib.sha256(json.dumps([scope, sys.version, inputs, engine], sort_keys=True).encode()).hexdigest()
@@ -157,6 +171,12 @@ def scan_scope(scope: str, root: Path) -> dict:
     else:
         raw = wrapper.scan(base)
         extra = [item for path in sorted(base.rglob("*.py")) for item in source_findings(path, root)]
+        if scope == "api":
+            for name in api_docs(root):
+                doc = root / name
+                if doc.is_symlink():
+                    raise ValueError("Символическая ссылка в документации API")
+                extra.extend(docs_credential_findings(doc, base / "server.py", root))
         if scope == "cache":
             extra.extend(cache_fixture_findings(root))
             seed = root / "seed_cache.py"
@@ -183,18 +203,26 @@ def scan_scope(scope: str, root: Path) -> dict:
     if sampled:
         warnings.append({"code": "SAMPLED_WEIGHTS", "blocking": False,
                          "message": (f"Ограничений статистического анализа: {sampled}. Возможны приближённые квантили, "
-                                     "неизвестные типы/формы PyTorch, порядок Fortran или выход за численный диапазон.")})
+                                     "лимит чтения, неизвестные типы/формы PyTorch, порядок Fortran или выход за численный диапазон.")})
     for warning in raw.get("warnings", []):
         if warning.get("code") == "DEPENDENCY_VERSION_UNRESOLVED":
             location = relative_object(warning["object"], root, base)
             warnings.append({"code": warning["code"], "blocking": False,
                              "message": model.dependency_version_message(location, warning["package"])})
-    if any(warning.get("blocking") for warning in raw.get("warnings", [])):
+        elif warning.get("code") == "ARCHIVE_REJECTED":
+            warnings.append(warning)
+    if any(warning.get("blocking") and warning.get("code") != "ARCHIVE_REJECTED"
+           for warning in raw.get("warnings", [])):
         warnings.append({"code": "ANALYZER_ERROR", "blocking": True,
                          "message": "Дополнительный анализатор не завершил проверку."})
 
     return {"id": scope, "status": raw["status"], "message": f"Проверка {scope}: {raw['status']}.",
             "warnings": warnings, "findings": findings + extra,
+            **({"weight_coverage": raw["weight_coverage"]} if "weight_coverage" in raw else {}),
+            **({"dependencies": [
+                {**entry, "file": relative_object(entry["file"], root, base)}
+                for entry in raw["dependencies"]
+            ]} if "dependencies" in raw else {}),
             "scanned_files": [relative_object(path, root, base) for path in raw["scanned_files"]]}
 
 

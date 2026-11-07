@@ -12,7 +12,7 @@ from tempfile import NamedTemporaryFile
 
 ROOT = Path(__file__).resolve().parents[1]
 MODULES = {
-    "model": ("scanners/model.py", "weight_points.py", "modelscan_adapter.py"),
+    "model": ("scanners/model.py", "weight_points.py", "weight_stream.py", "archive_limits.py", "modelscan_adapter.py"),
     "wrapper": ("scanners/wrapper.py",),
 }
 

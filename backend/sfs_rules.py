@@ -2,7 +2,7 @@
 import ast
 import re
 import sqlite3
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 
 def finding(rule, location, evidence, decision, severity, cwe, contour="wrapper"):
@@ -10,6 +10,74 @@ def finding(rule, location, evidence, decision, severity, cwe, contour="wrapper"
         "id": f"SFS-{rule}", "contour": contour, "object": location, "evidence": evidence,
         "decision": decision, "severity": severity, "status": "needs_review", "cwe": f"CWE-{cwe}",
     }
+
+
+def _literal(node, names):
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return node.value
+    return names.get(node.id, "") if isinstance(node, ast.Name) else ""
+
+
+def _operational_findings(tree, add):
+    # Only use module-level literal bindings. Reassignment makes a name ambiguous.
+    names = {}
+    writes = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Name) and isinstance(node.ctx, (ast.Store, ast.Del)):
+            writes[node.id] = writes.get(node.id, 0) + 1
+    for node in tree.body:
+        if isinstance(node, (ast.Assign, ast.AnnAssign)):
+            targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+            for target in targets:
+                if isinstance(target, ast.Name) and writes[target.id] == 1:
+                    names[target.id] = _literal(node.value, {})
+
+    sqlite_aliases = {}
+    process_aliases = {}
+    for node in tree.body:
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                if alias.name == "sqlite3":
+                    sqlite_aliases[f"{alias.asname or alias.name}.connect"] = "connect"
+                elif alias.name == "subprocess":
+                    process_aliases[alias.asname or alias.name] = True
+        if isinstance(node, ast.ImportFrom) and node.module == "sqlite3":
+            for alias in node.names:
+                if alias.name == "connect":
+                    sqlite_aliases[alias.asname or alias.name] = "connect"
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Dict):
+            for key, value in zip(node.keys, node.values):
+                if _literal(key, {}).lower() in {"host", "bind", "listen", "listen_address"} and _literal(value, names) in {"0.0.0.0", "::"}:
+                    add("WILDCARD-BIND", value.lineno, "Сетевой адрес в конфигурации по умолчанию слушает на всех интерфейсах.",
+                        "Ограничить интерфейс или явно настроить сетевые границы и проверить проброс порта.", "medium", 668)
+        if not isinstance(node, ast.Call):
+            continue
+        func = ast.unparse(node.func)
+        first = node.args[0] if node.args else None
+        if func in sqlite_aliases:
+            db_arg = first if first is not None else next((kw.value for kw in node.keywords if kw.arg == "database"), None)
+            path = PurePosixPath(_literal(db_arg, names))
+            if path.parent in {PurePosixPath("/tmp"), PurePosixPath("/var/tmp")}:
+                add("SQLITE-SHARED-TEMP", node.lineno, "SQLite открывает предсказуемый файл непосредственно в общем временном каталоге.",
+                    "Хранить базу в каталоге приложения с проверенными правами и владельцем.", "medium", 377)
+        if isinstance(node.func, ast.Attribute) and isinstance(node.func.value, ast.Name) and node.func.value.id in process_aliases:
+            if node.func.attr in {"Popen", "run", "call", "check_call", "check_output"}:
+                args = first if first is not None else next((kw.value for kw in node.keywords if kw.arg == "args"), None)
+                shell = next((kw.value for kw in node.keywords if kw.arg == "shell"), None)
+                override = any(kw.arg in ("executable", None) for kw in node.keywords)
+                if isinstance(args, (ast.List, ast.Tuple)) and args.elts and not override and (shell is None or isinstance(shell, ast.Constant) and shell.value is False):
+                    executable = _literal(args.elts[0], names)
+                    if executable and "/" not in executable and "\\" not in executable:
+                        add("SUBPROCESS-PATH-SEARCH", node.lineno, "Исполняемый файл задан без абсолютного пути и ищется в PATH.",
+                            "Задать доверенный абсолютный путь и контролировать окружение процесса.", "low", 426)
+        # Direct rfile.read(int(self.headers['Content-Length'])) with no bound in the expression.
+        if re.fullmatch(r"\w+\.rfile\.read", func) and isinstance(first, ast.Call) and isinstance(first.func, ast.Name) and first.func.id == "int" and len(first.args) == 1:
+            length = first.args[0]
+            if isinstance(length, ast.Subscript) and isinstance(length.value, ast.Attribute) and length.value.attr == "headers" and _literal(length.slice, {}).lower() == "content-length":
+                add("HTTP-BODY-UNBOUNDED", node.lineno, "Тело запроса читается целиком по длине из HTTP-заголовка без предела в выражении.",
+                    "Проверять длину и ограничивать размер тела и время чтения до разбора JSON.", "medium", 400)
 
 
 def source_findings(path: Path, root: Path) -> list[dict]:
@@ -25,6 +93,7 @@ def source_findings(path: Path, root: Path) -> list[dict]:
     def add(rule, line, evidence, decision, severity, cwe):
         issues.append(finding(rule, f"{rel}:{line}", evidence, decision, severity, cwe))
 
+    _operational_findings(tree, add)
     for node in ast.walk(tree):
         if isinstance(node, ast.Assign) and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
             for target in node.targets:
@@ -71,6 +140,34 @@ def source_findings(path: Path, root: Path) -> list[dict]:
                 if isinstance(expression, ast.BinOp) and isinstance(expression.op, ast.Div) and ast.unparse(expression.left) == "DOCS_DIR" and isinstance(expression.right, ast.Name):
                     add("DOC-PATH-TRAVERSAL", child.lineno, "Имя из query присоединяется к DOCS_DIR перед чтением. Проверка маршрута не ограничивает итоговый путь.",
                         "Разрешать конкретные имена документов или проверять resolve().is_relative_to() и тип файла.", "high", 22)
+    return issues
+
+
+def docs_credential_findings(doc: Path, server: Path, root: Path) -> list[dict]:
+    if not doc.is_file() or not server.is_file():
+        return []
+    try:
+        tree = ast.parse(server.read_text(encoding="utf-8"))
+    except SyntaxError:
+        return []
+    tokens = set()
+    for node in tree.body:
+        if isinstance(node, ast.Assign) and any(
+            isinstance(target, ast.Name) and target.id == "API_TOKEN" for target in node.targets
+        ):
+            token = _literal(node.value, {})
+            if len(token) >= 8:
+                tokens.add(token)
+    issues = []
+    for line_no, text in enumerate(doc.read_text(encoding="utf-8").splitlines(), 1):
+        match = re.search(r"(?i)\bAuthorization:\s*Bearer\s+([A-Za-z0-9._~+/-]+=*)(?=[\s'\"]|$)", text)
+        if match and match[1] in tokens:
+            issues.append(finding(
+                "DOC-CREDENTIAL-EXPOSURE", f"{doc.relative_to(root).as_posix()}:{line_no}",
+                "Пример Authorization в документации повторяет зафиксированный ключ API. Значение скрыто.",
+                "Удалить значение из документации и истории, ротировать ключ и использовать переменную окружения.",
+                "high", 798,
+            ))
     return issues
 
 

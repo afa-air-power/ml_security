@@ -1,0 +1,1445 @@
+{
+  "schema_version": 1,
+  "tools": {
+    "bandit": {
+      "raw_count": 18,
+      "normalized_count": 18,
+      "errors_or_skips": 0,
+      "linked": 7,
+      "unreviewed": 11,
+      "findings": [
+        {
+          "rule": "B324",
+          "file": "seed_cache.py",
+          "line": 24,
+          "severity": "HIGH",
+          "links": []
+        },
+        {
+          "rule": "B404",
+          "file": "model/_fixtures/legacy_weights.py",
+          "line": 3,
+          "severity": "LOW",
+          "links": []
+        },
+        {
+          "rule": "B108",
+          "file": "model/_fixtures/legacy_weights.py",
+          "line": 16,
+          "severity": "MEDIUM",
+          "links": []
+        },
+        {
+          "rule": "B104",
+          "file": "src/api/config.py",
+          "line": 4,
+          "severity": "MEDIUM",
+          "links": [
+            {
+              "rule": "SFS-WILDCARD-BIND",
+              "object": "src/api/config.py:4",
+              "status": "true_positive"
+            }
+          ]
+        },
+        {
+          "rule": "B105",
+          "file": "src/api/server.py",
+          "line": 14,
+          "severity": "LOW",
+          "links": [
+            {
+              "rule": "SFS-HARDCODED-CREDENTIAL",
+              "object": "src/api/server.py:14",
+              "status": "true_positive"
+            }
+          ]
+        },
+        {
+          "rule": "B105",
+          "file": "src/api/server.py",
+          "line": 18,
+          "severity": "LOW",
+          "links": [
+            {
+              "rule": "SFS-AUTH-BYPASS",
+              "object": "src/api/server.py:18",
+              "status": "true_positive"
+            }
+          ]
+        },
+        {
+          "rule": "B108",
+          "file": "src/cache/paths.py",
+          "line": 12,
+          "severity": "MEDIUM",
+          "links": []
+        },
+        {
+          "rule": "B108",
+          "file": "src/cache/store.py",
+          "line": 7,
+          "severity": "MEDIUM",
+          "links": []
+        },
+        {
+          "rule": "B324",
+          "file": "src/cache/store.py",
+          "line": 11,
+          "severity": "HIGH",
+          "links": [
+            {
+              "rule": "WRP-CRYPTO-WEAK-HASH",
+              "object": "src/cache/store.py:11",
+              "status": "false_positive"
+            }
+          ]
+        },
+        {
+          "rule": "B311",
+          "file": "src/cache/store.py",
+          "line": 15,
+          "severity": "LOW",
+          "links": []
+        },
+        {
+          "rule": "B608",
+          "file": "src/cache/store.py",
+          "line": 27,
+          "severity": "MEDIUM",
+          "links": [
+            {
+              "rule": "WRP-SQLI-DYNAMIC",
+              "object": "src/cache/store.py:27",
+              "status": "true_positive"
+            }
+          ]
+        },
+        {
+          "rule": "B404",
+          "file": "src/executor/runner.py",
+          "line": 2,
+          "severity": "LOW",
+          "links": []
+        },
+        {
+          "rule": "B602",
+          "file": "src/executor/runner.py",
+          "line": 10,
+          "severity": "HIGH",
+          "links": [
+            {
+              "rule": "WRP-CMD-SUBPROCESS-SHELL",
+              "object": "src/executor/runner.py:10",
+              "status": "true_positive"
+            }
+          ]
+        },
+        {
+          "rule": "B607",
+          "file": "src/executor/runner.py",
+          "line": 15,
+          "severity": "LOW",
+          "links": [
+            {
+              "rule": "SFS-SUBPROCESS-PATH-SEARCH",
+              "object": "src/executor/runner.py:15",
+              "status": "true_positive"
+            }
+          ]
+        },
+        {
+          "rule": "B603",
+          "file": "src/executor/runner.py",
+          "line": 15,
+          "severity": "LOW",
+          "links": []
+        },
+        {
+          "rule": "B615",
+          "file": "src/llm/client.py",
+          "line": 12,
+          "severity": "MEDIUM",
+          "links": []
+        },
+        {
+          "rule": "B615",
+          "file": "src/llm/client.py",
+          "line": 13,
+          "severity": "MEDIUM",
+          "links": []
+        },
+        {
+          "rule": "B310",
+          "file": "src/llm/client.py",
+          "line": 21,
+          "severity": "MEDIUM",
+          "links": []
+        }
+      ]
+    },
+    "semgrep": {
+      "raw_count": 3,
+      "normalized_count": 3,
+      "errors_or_skips": 0,
+      "linked": 2,
+      "unreviewed": 1,
+      "findings": [
+        {
+          "rule": "python.lang.security.insecure-hash-algorithms-md5.insecure-hash-algorithm-md5",
+          "file": "seed_cache.py",
+          "line": 24,
+          "links": []
+        },
+        {
+          "rule": "python.lang.security.insecure-hash-algorithms-md5.insecure-hash-algorithm-md5",
+          "file": "src/cache/store.py",
+          "line": 11,
+          "links": [
+            {
+              "rule": "WRP-CRYPTO-WEAK-HASH",
+              "object": "src/cache/store.py:11",
+              "status": "false_positive"
+            }
+          ]
+        },
+        {
+          "rule": "python.lang.security.audit.subprocess-shell-true.subprocess-shell-true",
+          "file": "src/executor/runner.py",
+          "line": 10,
+          "links": [
+            {
+              "rule": "WRP-CMD-SUBPROCESS-SHELL",
+              "object": "src/executor/runner.py:10",
+              "status": "true_positive"
+            }
+          ]
+        }
+      ]
+    },
+    "gitleaks": {
+      "raw_count": 4,
+      "normalized_count": 4,
+      "errors_or_skips": 0,
+      "linked": 4,
+      "unreviewed": 0,
+      "findings": [
+        {
+          "rule": "curl-auth-header",
+          "file": "docs/readme.md",
+          "line": 30,
+          "last_line": 32,
+          "links": [
+            {
+              "rule": "SFS-DOC-CREDENTIAL-EXPOSURE",
+              "object": "docs/readme.md:32",
+              "status": "true_positive"
+            }
+          ]
+        },
+        {
+          "rule": "generic-api-key",
+          "file": "seed_cache.py",
+          "line": 13,
+          "last_line": 13,
+          "links": [
+            {
+              "rule": "SFS-HARDCODED-CREDENTIAL",
+              "object": "seed_cache.py:13",
+              "status": "true_positive"
+            }
+          ]
+        },
+        {
+          "rule": "generic-api-key",
+          "file": "src/cache/store.py",
+          "line": 8,
+          "last_line": 8,
+          "links": [
+            {
+              "rule": "SFS-HARDCODED-CREDENTIAL",
+              "object": "src/cache/store.py:8",
+              "status": "true_positive"
+            }
+          ]
+        },
+        {
+          "rule": "generic-api-key",
+          "file": "src/api/server.py",
+          "line": 14,
+          "last_line": 14,
+          "links": [
+            {
+              "rule": "SFS-HARDCODED-CREDENTIAL",
+              "object": "src/api/server.py:14",
+              "status": "true_positive"
+            }
+          ]
+        }
+      ]
+    },
+    "modelscan": {
+      "raw_count": 9,
+      "normalized_count": 9,
+      "errors_or_skips": 0,
+      "linked": 9,
+      "unreviewed": 0,
+      "findings": [
+        {
+          "rule": "subprocess.Popen",
+          "file": "model/legacy_tokenizer_cache.pkl",
+          "severity": "CRITICAL",
+          "links": [
+            {
+              "rule": "MDL-PICKLE-RCE",
+              "object": "model/legacy_tokenizer_cache.pkl (offset 142)",
+              "status": "true_positive"
+            }
+          ]
+        },
+        {
+          "rule": "builtins.eval",
+          "file": "model/legacy_tokenizer_cache.pkl",
+          "severity": "CRITICAL",
+          "links": [
+            {
+              "rule": "MDL-PICKLE-RCE",
+              "object": "model/legacy_tokenizer_cache.pkl (offset 93)",
+              "status": "true_positive"
+            }
+          ]
+        },
+        {
+          "rule": "webbrowser.open",
+          "file": "model/legacy_tokenizer_cache.pkl",
+          "severity": "HIGH",
+          "links": [
+            {
+              "rule": "MDL-PICKLE-RCE",
+              "object": "model/legacy_tokenizer_cache.pkl (offset 222)",
+              "status": "true_positive"
+            }
+          ]
+        },
+        {
+          "rule": "shutil.rmtree",
+          "file": "model/legacy_tokenizer_cache.pkl",
+          "severity": "CRITICAL",
+          "links": [
+            {
+              "rule": "MDL-PICKLE-DANGEROUS-IO",
+              "object": "model/legacy_tokenizer_cache.pkl (offset 285)",
+              "status": "true_positive"
+            }
+          ]
+        },
+        {
+          "rule": "subprocess.Popen",
+          "file": "model/legacy_tokenizer_scache.joblib",
+          "severity": "CRITICAL",
+          "links": [
+            {
+              "rule": "MDL-PICKLE-RCE",
+              "object": "model/legacy_tokenizer_scache.joblib (offset 142)",
+              "status": "true_positive"
+            }
+          ]
+        },
+        {
+          "rule": "builtins.eval",
+          "file": "model/legacy_tokenizer_scache.joblib",
+          "severity": "CRITICAL",
+          "links": [
+            {
+              "rule": "MDL-PICKLE-RCE",
+              "object": "model/legacy_tokenizer_scache.joblib (offset 93)",
+              "status": "true_positive"
+            }
+          ]
+        },
+        {
+          "rule": "webbrowser.open",
+          "file": "model/legacy_tokenizer_scache.joblib",
+          "severity": "HIGH",
+          "links": [
+            {
+              "rule": "MDL-PICKLE-RCE",
+              "object": "model/legacy_tokenizer_scache.joblib (offset 222)",
+              "status": "true_positive"
+            }
+          ]
+        },
+        {
+          "rule": "shutil.rmtree",
+          "file": "model/legacy_tokenizer_scache.joblib",
+          "severity": "CRITICAL",
+          "links": [
+            {
+              "rule": "MDL-PICKLE-DANGEROUS-IO",
+              "object": "model/legacy_tokenizer_scache.joblib (offset 285)",
+              "status": "true_positive"
+            }
+          ]
+        },
+        {
+          "rule": "Keras.Lambda",
+          "file": "model/legacy_projection_weights.h5",
+          "severity": "MEDIUM",
+          "links": [
+            {
+              "rule": "MDL-KERAS-LAMBDA",
+              "object": "model/legacy_projection_weights.h5",
+              "status": "true_positive"
+            }
+          ]
+        }
+      ]
+    },
+    "pip-audit": {
+      "raw_count": 95,
+      "normalized_count": 61,
+      "errors_or_skips": 0,
+      "linked": 13,
+      "unreviewed": 48,
+      "findings": [
+        {
+          "rule": "CVE-2018-18074",
+          "aliases": [
+            "GHSA-x84v-xcm2-53pg",
+            "PYSEC-2018-28"
+          ],
+          "package": "requests",
+          "version": "2.19.1",
+          "locations": [
+            "requirements.txt:3"
+          ],
+          "listed_fixes": [
+            "2.20.0"
+          ],
+          "links": [
+            {
+              "rule": "SFS-DEP-CVE-2018-18074",
+              "object": "requirements.txt:3",
+              "status": "true_positive"
+            }
+          ]
+        },
+        {
+          "rule": "CVE-2023-32681",
+          "aliases": [
+            "GHSA-j8r2-6x86-q33q",
+            "PYSEC-2023-74"
+          ],
+          "package": "requests",
+          "version": "2.19.1",
+          "locations": [
+            "requirements.txt:3"
+          ],
+          "listed_fixes": [
+            "2.31.0"
+          ],
+          "links": [
+            {
+              "rule": "SFS-DEP-CVE-2023-32681",
+              "object": "requirements.txt:3",
+              "status": "true_positive"
+            }
+          ]
+        },
+        {
+          "rule": "CVE-2024-35195",
+          "aliases": [
+            "GHSA-9wx4-h78v-vm56",
+            "PYSEC-2026-1873"
+          ],
+          "package": "requests",
+          "version": "2.19.1",
+          "locations": [
+            "requirements.txt:3"
+          ],
+          "listed_fixes": [
+            "2.32.0"
+          ],
+          "links": [
+            {
+              "rule": "MDL-DEP-CVE-2024-35195",
+              "object": "requirements.txt:3 (requests==2.19.1)",
+              "status": "true_positive"
+            }
+          ]
+        },
+        {
+          "rule": "CVE-2024-47081",
+          "aliases": [
+            "GHSA-9hjg-9r4m-mvj7",
+            "PYSEC-2026-1872"
+          ],
+          "package": "requests",
+          "version": "2.19.1",
+          "locations": [
+            "requirements.txt:3"
+          ],
+          "listed_fixes": [
+            "2.32.4"
+          ],
+          "links": [
+            {
+              "rule": "SFS-DEP-CVE-2024-47081",
+              "object": "requirements.txt:3",
+              "status": "true_positive"
+            }
+          ]
+        },
+        {
+          "rule": "CVE-2026-25645",
+          "aliases": [
+            "GHSA-gc5v-m9x4-r6x2",
+            "PYSEC-2026-2275"
+          ],
+          "package": "requests",
+          "version": "2.19.1",
+          "locations": [
+            "requirements.txt:3"
+          ],
+          "listed_fixes": [
+            "2.33.0"
+          ],
+          "links": [
+            {
+              "rule": "SFS-DEP-CVE-2026-25645",
+              "object": "requirements.txt:3",
+              "status": "true_positive"
+            }
+          ]
+        },
+        {
+          "rule": "CVE-2024-48063",
+          "aliases": [
+            "PYSEC-2024-259"
+          ],
+          "package": "torch",
+          "version": "2.4.0",
+          "locations": [
+            "requirements.txt:2"
+          ],
+          "listed_fixes": [
+            "2.5.0"
+          ],
+          "links": []
+        },
+        {
+          "rule": "CVE-2025-2148",
+          "aliases": [
+            "BIT-pytorch-2025-2148",
+            "GHSA-c678-jfcj-6jmf",
+            "PYSEC-2025-189"
+          ],
+          "package": "torch",
+          "version": "2.4.0",
+          "locations": [
+            "requirements.txt:2"
+          ],
+          "listed_fixes": [],
+          "links": []
+        },
+        {
+          "rule": "CVE-2025-2149",
+          "aliases": [
+            "BIT-pytorch-2025-2149",
+            "GHSA-x3gm-94wq-g975",
+            "PYSEC-2025-190"
+          ],
+          "package": "torch",
+          "version": "2.4.0",
+          "locations": [
+            "requirements.txt:2"
+          ],
+          "listed_fixes": [],
+          "links": []
+        },
+        {
+          "rule": "CVE-2025-2953",
+          "aliases": [
+            "BIT-pytorch-2025-2953",
+            "GHSA-3749-ghw9-m3mg",
+            "PYSEC-2025-191"
+          ],
+          "package": "torch",
+          "version": "2.4.0",
+          "locations": [
+            "requirements.txt:2"
+          ],
+          "listed_fixes": [
+            "2.7.1rc1"
+          ],
+          "links": []
+        },
+        {
+          "rule": "CVE-2025-2998",
+          "aliases": [
+            "BIT-pytorch-2025-2998",
+            "GHSA-f4hp-rmr7-r7v8",
+            "PYSEC-2025-192"
+          ],
+          "package": "torch",
+          "version": "2.4.0",
+          "locations": [
+            "requirements.txt:2"
+          ],
+          "listed_fixes": [],
+          "links": []
+        },
+        {
+          "rule": "CVE-2025-2999",
+          "aliases": [
+            "BIT-pytorch-2025-2999",
+            "GHSA-vgrw-7cvw-pwgx",
+            "PYSEC-2025-193"
+          ],
+          "package": "torch",
+          "version": "2.4.0",
+          "locations": [
+            "requirements.txt:2"
+          ],
+          "listed_fixes": [
+            "2.9.1"
+          ],
+          "links": []
+        },
+        {
+          "rule": "CVE-2025-3000",
+          "aliases": [
+            "BIT-pytorch-2025-3000",
+            "GHSA-rrmf-rvhw-rf47",
+            "PYSEC-2025-194"
+          ],
+          "package": "torch",
+          "version": "2.4.0",
+          "locations": [
+            "requirements.txt:2"
+          ],
+          "listed_fixes": [
+            "2.13.0"
+          ],
+          "links": []
+        },
+        {
+          "rule": "CVE-2025-3001",
+          "aliases": [
+            "BIT-pytorch-2025-3001",
+            "GHSA-qfhq-4f3w-5fph",
+            "PYSEC-2025-195"
+          ],
+          "package": "torch",
+          "version": "2.4.0",
+          "locations": [
+            "requirements.txt:2"
+          ],
+          "listed_fixes": [
+            "2.10.0"
+          ],
+          "links": []
+        },
+        {
+          "rule": "CVE-2025-32434",
+          "aliases": [
+            "BIT-pytorch-2025-32434",
+            "GHSA-53q9-r3pm-6pq6",
+            "PYSEC-2025-41"
+          ],
+          "package": "torch",
+          "version": "2.4.0",
+          "locations": [
+            "requirements.txt:2"
+          ],
+          "listed_fixes": [
+            "2.6.0"
+          ],
+          "links": [
+            {
+              "rule": "MDL-DEP-CVE-2025-32434",
+              "object": "requirements.txt:2 (torch==2.4.0)",
+              "status": "true_positive"
+            }
+          ]
+        },
+        {
+          "rule": "CVE-2025-3730",
+          "aliases": [
+            "BIT-pytorch-2025-3730",
+            "GHSA-887c-mr87-cxwp",
+            "PYSEC-2026-1970"
+          ],
+          "package": "torch",
+          "version": "2.4.0",
+          "locations": [
+            "requirements.txt:2"
+          ],
+          "listed_fixes": [
+            "2.8.0"
+          ],
+          "links": []
+        },
+        {
+          "rule": "CVE-2025-46148",
+          "aliases": [
+            "BIT-pytorch-2025-46148",
+            "PYSEC-2025-198"
+          ],
+          "package": "torch",
+          "version": "2.4.0",
+          "locations": [
+            "requirements.txt:2"
+          ],
+          "listed_fixes": [
+            "2.7.0"
+          ],
+          "links": []
+        },
+        {
+          "rule": "CVE-2025-55551",
+          "aliases": [
+            "BIT-pytorch-2025-55551",
+            "PYSEC-2025-203"
+          ],
+          "package": "torch",
+          "version": "2.4.0",
+          "locations": [
+            "requirements.txt:2"
+          ],
+          "listed_fixes": [
+            "2.9.0"
+          ],
+          "links": []
+        },
+        {
+          "rule": "CVE-2025-55552",
+          "aliases": [
+            "BIT-pytorch-2025-55552",
+            "PYSEC-2025-204"
+          ],
+          "package": "torch",
+          "version": "2.4.0",
+          "locations": [
+            "requirements.txt:2"
+          ],
+          "listed_fixes": [
+            "2.9.0"
+          ],
+          "links": []
+        },
+        {
+          "rule": "CVE-2025-55553",
+          "aliases": [
+            "BIT-pytorch-2025-55553",
+            "PYSEC-2025-205"
+          ],
+          "package": "torch",
+          "version": "2.4.0",
+          "locations": [
+            "requirements.txt:2"
+          ],
+          "listed_fixes": [
+            "2.7.1"
+          ],
+          "links": []
+        },
+        {
+          "rule": "CVE-2025-55554",
+          "aliases": [
+            "BIT-pytorch-2025-55554",
+            "PYSEC-2025-206"
+          ],
+          "package": "torch",
+          "version": "2.4.0",
+          "locations": [
+            "requirements.txt:2"
+          ],
+          "listed_fixes": [
+            "2.9.0"
+          ],
+          "links": []
+        },
+        {
+          "rule": "CVE-2025-55557",
+          "aliases": [
+            "BIT-pytorch-2025-55557",
+            "PYSEC-2025-207"
+          ],
+          "package": "torch",
+          "version": "2.4.0",
+          "locations": [
+            "requirements.txt:2"
+          ],
+          "listed_fixes": [
+            "2.7.1"
+          ],
+          "links": []
+        },
+        {
+          "rule": "CVE-2025-55558",
+          "aliases": [
+            "BIT-pytorch-2025-55558",
+            "PYSEC-2025-208"
+          ],
+          "package": "torch",
+          "version": "2.4.0",
+          "locations": [
+            "requirements.txt:2"
+          ],
+          "listed_fixes": [
+            "2.7.1"
+          ],
+          "links": []
+        },
+        {
+          "rule": "CVE-2025-55560",
+          "aliases": [
+            "BIT-pytorch-2025-55560",
+            "PYSEC-2025-209"
+          ],
+          "package": "torch",
+          "version": "2.4.0",
+          "locations": [
+            "requirements.txt:2"
+          ],
+          "listed_fixes": [
+            "2.7.1"
+          ],
+          "links": []
+        },
+        {
+          "rule": "CVE-2026-24747",
+          "aliases": [
+            "BIT-pytorch-2026-24747",
+            "GHSA-63cw-57p8-fm3p",
+            "PYSEC-2026-1856",
+            "PYSEC-2026-2286"
+          ],
+          "package": "torch",
+          "version": "2.4.0",
+          "locations": [
+            "requirements.txt:2"
+          ],
+          "listed_fixes": [
+            "2.10.0"
+          ],
+          "links": [
+            {
+              "rule": "SFS-DEP-CVE-2026-24747",
+              "object": "requirements.txt:2",
+              "status": "true_positive"
+            }
+          ]
+        },
+        {
+          "rule": "CVE-2026-4538",
+          "aliases": [
+            "BIT-pytorch-2026-4538",
+            "PYSEC-2026-139"
+          ],
+          "package": "torch",
+          "version": "2.4.0",
+          "locations": [
+            "requirements.txt:2"
+          ],
+          "listed_fixes": [],
+          "links": []
+        },
+        {
+          "rule": "CVE-2024-11392",
+          "aliases": [
+            "GHSA-qxrp-vhvm-j765",
+            "PYSEC-2024-227"
+          ],
+          "package": "transformers",
+          "version": "4.44.0",
+          "locations": [
+            "requirements.txt:1"
+          ],
+          "listed_fixes": [
+            "4.48.0"
+          ],
+          "links": [
+            {
+              "rule": "MDL-DEP-CVE-2024-11392",
+              "object": "requirements.txt:1 (transformers==4.44.0)",
+              "status": "true_positive"
+            }
+          ]
+        },
+        {
+          "rule": "CVE-2024-11393",
+          "aliases": [
+            "GHSA-wrfc-pvp9-mr9g",
+            "PYSEC-2024-228"
+          ],
+          "package": "transformers",
+          "version": "4.44.0",
+          "locations": [
+            "requirements.txt:1"
+          ],
+          "listed_fixes": [
+            "4.48.0"
+          ],
+          "links": [
+            {
+              "rule": "SFS-DEP-CVE-2024-11393",
+              "object": "requirements.txt:1",
+              "status": "true_positive"
+            }
+          ]
+        },
+        {
+          "rule": "CVE-2024-11394",
+          "aliases": [
+            "GHSA-hxxf-235m-72v3",
+            "PYSEC-2024-229"
+          ],
+          "package": "transformers",
+          "version": "4.44.0",
+          "locations": [
+            "requirements.txt:1"
+          ],
+          "listed_fixes": [
+            "4.48.0"
+          ],
+          "links": [
+            {
+              "rule": "SFS-DEP-CVE-2024-11394",
+              "object": "requirements.txt:1",
+              "status": "true_positive"
+            }
+          ]
+        },
+        {
+          "rule": "CVE-2024-12720",
+          "aliases": [
+            "GHSA-6rvg-6v2m-4j46",
+            "PYSEC-2026-1982"
+          ],
+          "package": "transformers",
+          "version": "4.44.0",
+          "locations": [
+            "requirements.txt:1"
+          ],
+          "listed_fixes": [
+            "4.48.0"
+          ],
+          "links": []
+        },
+        {
+          "rule": "CVE-2025-1194",
+          "aliases": [
+            "GHSA-fpwr-67px-3qhx",
+            "PYSEC-2026-1984"
+          ],
+          "package": "transformers",
+          "version": "4.44.0",
+          "locations": [
+            "requirements.txt:1"
+          ],
+          "listed_fixes": [
+            "4.50.0"
+          ],
+          "links": []
+        },
+        {
+          "rule": "CVE-2025-14920",
+          "aliases": [
+            "PYSEC-2025-211"
+          ],
+          "package": "transformers",
+          "version": "4.44.0",
+          "locations": [
+            "requirements.txt:1"
+          ],
+          "listed_fixes": [],
+          "links": []
+        },
+        {
+          "rule": "CVE-2025-14921",
+          "aliases": [
+            "PYSEC-2025-212"
+          ],
+          "package": "transformers",
+          "version": "4.44.0",
+          "locations": [
+            "requirements.txt:1"
+          ],
+          "listed_fixes": [],
+          "links": []
+        },
+        {
+          "rule": "CVE-2025-14924",
+          "aliases": [
+            "PYSEC-2025-213"
+          ],
+          "package": "transformers",
+          "version": "4.44.0",
+          "locations": [
+            "requirements.txt:1"
+          ],
+          "listed_fixes": [],
+          "links": []
+        },
+        {
+          "rule": "CVE-2025-14926",
+          "aliases": [
+            "PYSEC-2025-214"
+          ],
+          "package": "transformers",
+          "version": "4.44.0",
+          "locations": [
+            "requirements.txt:1"
+          ],
+          "listed_fixes": [],
+          "links": []
+        },
+        {
+          "rule": "CVE-2025-14927",
+          "aliases": [
+            "PYSEC-2025-215"
+          ],
+          "package": "transformers",
+          "version": "4.44.0",
+          "locations": [
+            "requirements.txt:1"
+          ],
+          "listed_fixes": [],
+          "links": []
+        },
+        {
+          "rule": "CVE-2025-14928",
+          "aliases": [
+            "PYSEC-2025-216"
+          ],
+          "package": "transformers",
+          "version": "4.44.0",
+          "locations": [
+            "requirements.txt:1"
+          ],
+          "listed_fixes": [],
+          "links": []
+        },
+        {
+          "rule": "CVE-2025-14929",
+          "aliases": [
+            "PYSEC-2025-217"
+          ],
+          "package": "transformers",
+          "version": "4.44.0",
+          "locations": [
+            "requirements.txt:1"
+          ],
+          "listed_fixes": [],
+          "links": []
+        },
+        {
+          "rule": "CVE-2025-14930",
+          "aliases": [
+            "PYSEC-2025-218"
+          ],
+          "package": "transformers",
+          "version": "4.44.0",
+          "locations": [
+            "requirements.txt:1"
+          ],
+          "listed_fixes": [],
+          "links": []
+        },
+        {
+          "rule": "CVE-2025-2099",
+          "aliases": [
+            "GHSA-qq3j-4f4f-9583",
+            "PYSEC-2025-40"
+          ],
+          "package": "transformers",
+          "version": "4.44.0",
+          "locations": [
+            "requirements.txt:1"
+          ],
+          "listed_fixes": [
+            "4.49.0",
+            "4.50.0"
+          ],
+          "links": []
+        },
+        {
+          "rule": "CVE-2025-3263",
+          "aliases": [
+            "GHSA-q2wp-rjmx-x6x9",
+            "PYSEC-2026-1987"
+          ],
+          "package": "transformers",
+          "version": "4.44.0",
+          "locations": [
+            "requirements.txt:1"
+          ],
+          "listed_fixes": [
+            "4.51.0"
+          ],
+          "links": []
+        },
+        {
+          "rule": "CVE-2025-3264",
+          "aliases": [
+            "GHSA-jjph-296x-mrcr",
+            "PYSEC-2026-1985"
+          ],
+          "package": "transformers",
+          "version": "4.44.0",
+          "locations": [
+            "requirements.txt:1"
+          ],
+          "listed_fixes": [
+            "4.51.0"
+          ],
+          "links": []
+        },
+        {
+          "rule": "CVE-2025-3777",
+          "aliases": [
+            "GHSA-phhr-52qp-3mj4",
+            "PYSEC-2026-1986"
+          ],
+          "package": "transformers",
+          "version": "4.44.0",
+          "locations": [
+            "requirements.txt:1"
+          ],
+          "listed_fixes": [
+            "4.52.1"
+          ],
+          "links": []
+        },
+        {
+          "rule": "CVE-2025-3933",
+          "aliases": [
+            "GHSA-37mw-44qp-f5jm",
+            "PYSEC-2026-1977"
+          ],
+          "package": "transformers",
+          "version": "4.44.0",
+          "locations": [
+            "requirements.txt:1"
+          ],
+          "listed_fixes": [
+            "4.52.1"
+          ],
+          "links": []
+        },
+        {
+          "rule": "CVE-2025-5197",
+          "aliases": [
+            "GHSA-9356-575x-2w9m",
+            "PYSEC-2026-1983"
+          ],
+          "package": "transformers",
+          "version": "4.44.0",
+          "locations": [
+            "requirements.txt:1"
+          ],
+          "listed_fixes": [
+            "4.53.0"
+          ],
+          "links": []
+        },
+        {
+          "rule": "CVE-2025-6051",
+          "aliases": [
+            "GHSA-rcv9-qm8p-9p6j",
+            "PYSEC-2026-1988"
+          ],
+          "package": "transformers",
+          "version": "4.44.0",
+          "locations": [
+            "requirements.txt:1"
+          ],
+          "listed_fixes": [
+            "4.53.0"
+          ],
+          "links": []
+        },
+        {
+          "rule": "CVE-2025-6638",
+          "aliases": [
+            "GHSA-59p9-h35m-wg4g",
+            "PYSEC-2026-1981"
+          ],
+          "package": "transformers",
+          "version": "4.44.0",
+          "locations": [
+            "requirements.txt:1"
+          ],
+          "listed_fixes": [
+            "4.53.0"
+          ],
+          "links": []
+        },
+        {
+          "rule": "CVE-2025-6921",
+          "aliases": [
+            "GHSA-4w7r-h757-3r74",
+            "PYSEC-2026-1980"
+          ],
+          "package": "transformers",
+          "version": "4.44.0",
+          "locations": [
+            "requirements.txt:1"
+          ],
+          "listed_fixes": [
+            "4.53.0"
+          ],
+          "links": []
+        },
+        {
+          "rule": "CVE-2026-1839",
+          "aliases": [
+            "GHSA-69w3-r845-3855",
+            "PYSEC-2026-2288"
+          ],
+          "package": "transformers",
+          "version": "4.44.0",
+          "locations": [
+            "requirements.txt:1"
+          ],
+          "listed_fixes": [
+            "5.0.0",
+            "5.0.0rc3"
+          ],
+          "links": []
+        },
+        {
+          "rule": "CVE-2026-4372",
+          "aliases": [
+            "GHSA-29pf-2h5f-8g72",
+            "PYSEC-2026-2289"
+          ],
+          "package": "transformers",
+          "version": "4.44.0",
+          "locations": [
+            "requirements.txt:1"
+          ],
+          "listed_fixes": [
+            "5.3.0"
+          ],
+          "links": []
+        },
+        {
+          "rule": "CVE-2026-5241",
+          "aliases": [
+            "GHSA-fgcw-684q-jj6r",
+            "PYSEC-2026-2290"
+          ],
+          "package": "transformers",
+          "version": "4.44.0",
+          "locations": [
+            "requirements.txt:1"
+          ],
+          "listed_fixes": [
+            "5.5.0"
+          ],
+          "links": []
+        },
+        {
+          "rule": "CVE-2026-9856",
+          "aliases": [
+            "GHSA-xrqw-3rrv-vx5w",
+            "PYSEC-2026-3929"
+          ],
+          "package": "transformers",
+          "version": "4.44.0",
+          "locations": [
+            "requirements.txt:1"
+          ],
+          "listed_fixes": [
+            "5.10.0"
+          ],
+          "links": []
+        },
+        {
+          "rule": "CVE-2023-43804",
+          "aliases": [
+            "GHSA-v845-jxx5-vc9f",
+            "PYSEC-2023-192"
+          ],
+          "package": "urllib3",
+          "version": "1.26.9",
+          "locations": [
+            "docker-constraints.txt:1"
+          ],
+          "listed_fixes": [
+            "1.26.17",
+            "2.0.6"
+          ],
+          "links": [
+            {
+              "rule": "SFS-DEP-CVE-2023-43804",
+              "object": "docker-constraints.txt:1",
+              "status": "true_positive"
+            }
+          ]
+        },
+        {
+          "rule": "CVE-2023-45803",
+          "aliases": [
+            "GHSA-g4mx-q9vg-27p4",
+            "PYSEC-2023-212"
+          ],
+          "package": "urllib3",
+          "version": "1.26.9",
+          "locations": [
+            "docker-constraints.txt:1"
+          ],
+          "listed_fixes": [
+            "1.26.18",
+            "2.0.7"
+          ],
+          "links": [
+            {
+              "rule": "SFS-DEP-CVE-2023-45803",
+              "object": "docker-constraints.txt:1",
+              "status": "true_positive"
+            }
+          ]
+        },
+        {
+          "rule": "CVE-2024-37891",
+          "aliases": [
+            "GHSA-34jh-p97f-mpxf",
+            "PYSEC-2026-1995"
+          ],
+          "package": "urllib3",
+          "version": "1.26.9",
+          "locations": [
+            "docker-constraints.txt:1"
+          ],
+          "listed_fixes": [
+            "1.26.19",
+            "2.2.2"
+          ],
+          "links": [
+            {
+              "rule": "MDL-DEP-CVE-2024-37891",
+              "object": "docker-constraints.txt:1 (urllib3==1.26.9)",
+              "status": "true_positive"
+            }
+          ]
+        },
+        {
+          "rule": "CVE-2025-50181",
+          "aliases": [
+            "GHSA-pq67-6m6q-mj2v",
+            "PYSEC-2026-1999"
+          ],
+          "package": "urllib3",
+          "version": "1.26.9",
+          "locations": [
+            "docker-constraints.txt:1"
+          ],
+          "listed_fixes": [
+            "2.5.0"
+          ],
+          "links": []
+        },
+        {
+          "rule": "CVE-2025-66418",
+          "aliases": [
+            "GHSA-gm62-xv2j-4w53",
+            "PYSEC-2026-1998"
+          ],
+          "package": "urllib3",
+          "version": "1.26.9",
+          "locations": [
+            "docker-constraints.txt:1"
+          ],
+          "listed_fixes": [
+            "2.6.0"
+          ],
+          "links": []
+        },
+        {
+          "rule": "CVE-2025-66471",
+          "aliases": [
+            "GHSA-2xpw-w6gg-jr37",
+            "PYSEC-2026-1994"
+          ],
+          "package": "urllib3",
+          "version": "1.26.9",
+          "locations": [
+            "docker-constraints.txt:1"
+          ],
+          "listed_fixes": [
+            "2.6.0"
+          ],
+          "links": []
+        },
+        {
+          "rule": "CVE-2026-21441",
+          "aliases": [
+            "GHSA-38jv-5279-wg99",
+            "PYSEC-2026-1996"
+          ],
+          "package": "urllib3",
+          "version": "1.26.9",
+          "locations": [
+            "docker-constraints.txt:1"
+          ],
+          "listed_fixes": [
+            "2.6.3"
+          ],
+          "links": []
+        },
+        {
+          "rule": "CVE-2026-44431",
+          "aliases": [
+            "GHSA-qccp-gfcp-xxvc",
+            "PYSEC-2026-141"
+          ],
+          "package": "urllib3",
+          "version": "1.26.9",
+          "locations": [
+            "docker-constraints.txt:1"
+          ],
+          "listed_fixes": [
+            "2.7.0"
+          ],
+          "links": []
+        },
+        {
+          "rule": "CVE-2026-97687",
+          "aliases": [
+            "GHSA-8988-9cw3-xx77",
+            "PYSEC-2026-4175"
+          ],
+          "package": "urllib3",
+          "version": "1.26.9",
+          "locations": [
+            "docker-constraints.txt:1"
+          ],
+          "listed_fixes": [
+            "2.8.0"
+          ],
+          "links": []
+        },
+        {
+          "rule": "CVE-2026-97689",
+          "aliases": [
+            "GHSA-vxq7-64xx-v4gw",
+            "PYSEC-2026-4177"
+          ],
+          "package": "urllib3",
+          "version": "1.26.9",
+          "locations": [
+            "docker-constraints.txt:1"
+          ],
+          "listed_fixes": [
+            "2.8.0"
+          ],
+          "links": []
+        }
+      ]
+    }
+  }
+}

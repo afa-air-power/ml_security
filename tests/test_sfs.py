@@ -72,7 +72,7 @@ class SFSTests(unittest.TestCase):
             (root / "model/config.json").write_text("{}")
             (root / "requirements.txt").write_text("\n".join([
                 "requests[security]==2.19.1 # vulnerable",
-                "requests==2.32.0.0",
+                "requests==2.33.0.0",
                 *ambiguous,
             ]))
             (root / "docker-constraints.txt").write_text("urllib3==1.26.9\n")

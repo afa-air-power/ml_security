@@ -1,0 +1,1498 @@
+{
+  "version": "15.0.7",
+  "scan": {
+    "type": "sast",
+    "analyzer": {
+      "id": "swordfish-sfs",
+      "name": "Swordfish SFS",
+      "version": "1.1.0",
+      "vendor": {
+        "name": "Swordfish SFS"
+      }
+    },
+    "scanner": {
+      "id": "swordfish-sfs",
+      "name": "Swordfish SFS",
+      "version": "1.1.0",
+      "vendor": {
+        "name": "Swordfish SFS"
+      }
+    },
+    "status": "success",
+    "start_time": "2026-11-07T20:28:35",
+    "end_time": "2026-11-07T20:28:35",
+    "messages": []
+  },
+  "vulnerabilities": [
+    {
+      "id": "6a2fdbd264e295edd50e3b39fe31c291114529b0fef99509f8c60c07fcaac928",
+      "name": "SFS-DEP-DOCKER-CVE-2024-35195",
+      "description": "Второй pip install ограничивает requests диапазоном ниже исправления 2.32.0. Уязвимость зависит от verify=False в Session.",
+      "severity": "Medium",
+      "identifiers": [
+        {
+          "type": "sfs_rule",
+          "name": "SFS-DEP-DOCKER-CVE-2024-35195",
+          "value": "SFS-DEP-DOCKER-CVE-2024-35195"
+        },
+        {
+          "type": "cve",
+          "name": "CVE-2024-35195",
+          "value": "CVE-2024-35195",
+          "url": "https://www.cve.org/CVERecord?id=CVE-2024-35195"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-295",
+          "value": "295",
+          "url": "https://cwe.mitre.org/data/definitions/295.html"
+        }
+      ],
+      "location": {
+        "file": "Dockerfile",
+        "start_line": 10,
+        "end_line": 10
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "Dockerfile:10"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "Финальная команда установки сохраняет диапазон ниже 2.32.0. Заменить ограничение единым безопасным lock."
+        }
+      },
+      "solution": "Убрать двухфазное разрешение и использовать единый lock с исправленной версией."
+    },
+    {
+      "id": "738add791690f0f6bd3a3d7b8a46929d5a023587953b9fae131ca72fa6b1f7f7",
+      "name": "SFS-REDUCE-HOOK",
+      "description": "Сериализационный hook возвращает вызываемый объект webbrowser.open.",
+      "severity": "High",
+      "identifiers": [
+        {
+          "type": "sfs_rule",
+          "name": "SFS-REDUCE-HOOK",
+          "value": "SFS-REDUCE-HOOK"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-502",
+          "value": "502",
+          "url": "https://cwe.mitre.org/data/definitions/502.html"
+        }
+      ],
+      "location": {
+        "file": "model/_fixtures/legacy_weights.py",
+        "start_line": 12,
+        "end_line": 12
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "model/_fixtures/legacy_weights.py:12"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "AST подтверждает возвращаемый callable из hook. Это вспомогательный исходник для сериализации, текущий загрузчик его не импортирует. Удалить из поставки."
+        }
+      },
+      "solution": "Удалить побочные эффекты из __reduce__ и хранить только данные безопасного формата."
+    },
+    {
+      "id": "9fd59bc190ef71d794fb77cf3bf7c38879b060f1f2df5f3cb5840922aa33605d",
+      "name": "SFS-REDUCE-HOOK",
+      "description": "Сериализационный hook возвращает вызываемый объект shutil.rmtree.",
+      "severity": "High",
+      "identifiers": [
+        {
+          "type": "sfs_rule",
+          "name": "SFS-REDUCE-HOOK",
+          "value": "SFS-REDUCE-HOOK"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-502",
+          "value": "502",
+          "url": "https://cwe.mitre.org/data/definitions/502.html"
+        }
+      ],
+      "location": {
+        "file": "model/_fixtures/legacy_weights.py",
+        "start_line": 16,
+        "end_line": 16
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "model/_fixtures/legacy_weights.py:16"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "AST подтверждает возвращаемый callable из hook. Это вспомогательный исходник для сериализации, текущий загрузчик его не импортирует. Удалить из поставки."
+        }
+      },
+      "solution": "Удалить побочные эффекты из __reduce__ и хранить только данные безопасного формата."
+    },
+    {
+      "id": "5b420d46b8f44e63d2bcb65d033bcd340022d4d721ed0f9b045376c39fdad17e",
+      "name": "SFS-REDUCE-HOOK",
+      "description": "Сериализационный hook возвращает вызываемый объект eval.",
+      "severity": "High",
+      "identifiers": [
+        {
+          "type": "sfs_rule",
+          "name": "SFS-REDUCE-HOOK",
+          "value": "SFS-REDUCE-HOOK"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-502",
+          "value": "502",
+          "url": "https://cwe.mitre.org/data/definitions/502.html"
+        }
+      ],
+      "location": {
+        "file": "model/_fixtures/legacy_weights.py",
+        "start_line": 6,
+        "end_line": 6
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "model/_fixtures/legacy_weights.py:6"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "AST подтверждает возвращаемый callable из hook. Это вспомогательный исходник для сериализации, текущий загрузчик его не импортирует. Удалить из поставки."
+        }
+      },
+      "solution": "Удалить побочные эффекты из __reduce__ и хранить только данные безопасного формата."
+    },
+    {
+      "id": "c36d8c5254026dc4354fccbaa2bd6342108c302a8d0ec6c0318eeeaceb63ff50",
+      "name": "SFS-REDUCE-HOOK",
+      "description": "Сериализационный hook возвращает вызываемый объект Popen.",
+      "severity": "High",
+      "identifiers": [
+        {
+          "type": "sfs_rule",
+          "name": "SFS-REDUCE-HOOK",
+          "value": "SFS-REDUCE-HOOK"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-502",
+          "value": "502",
+          "url": "https://cwe.mitre.org/data/definitions/502.html"
+        }
+      ],
+      "location": {
+        "file": "model/_fixtures/legacy_weights.py",
+        "start_line": 9,
+        "end_line": 9
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "model/_fixtures/legacy_weights.py:9"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "AST подтверждает возвращаемый callable из hook. Это вспомогательный исходник для сериализации, текущий загрузчик его не импортирует. Удалить из поставки."
+        }
+      },
+      "solution": "Удалить побочные эффекты из __reduce__ и хранить только данные безопасного формата."
+    },
+    {
+      "id": "adc685f59c56b28a9a75765b9629765e4bc328a2d6932819d92c4fbb9c8ad9b8",
+      "name": "MDL-KERAS-LAMBDA",
+      "description": "В HDF5 метаданные model_config содержат слой Keras Lambda и сериализованную функцию.",
+      "severity": "Critical",
+      "identifiers": [
+        {
+          "type": "sfs_rule",
+          "name": "MDL-KERAS-LAMBDA",
+          "value": "MDL-KERAS-LAMBDA-301f30e80a2cb517"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-502",
+          "value": "502",
+          "url": "https://cwe.mitre.org/data/definitions/502.html"
+        }
+      ],
+      "location": {
+        "file": "model/legacy_projection_weights.h5",
+        "start_line": 1,
+        "end_line": 1
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "model/legacy_projection_weights.h5"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "Строка model_config в HDF5 содержит Lambda с функцией. Убрать легаси-артефакт из поставки. Основной загрузчик использует SafeTensors."
+        }
+      },
+      "solution": "Сверить место с оригиналом и устранить выявленный механизм."
+    },
+    {
+      "id": "d9ce111529642d33d27f51d0ca91a705003140ed9139791c8c33c5767351a5d6",
+      "name": "MDL-PICKLE-RCE",
+      "description": "Статический разбор Pickle обнаружил опасный оператор для subprocess.Popen. Смещение указано в объекте.",
+      "severity": "Critical",
+      "identifiers": [
+        {
+          "type": "sfs_rule",
+          "name": "MDL-PICKLE-RCE",
+          "value": "MDL-PICKLE-RCE-3da4a6ee861944ad"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-502",
+          "value": "502",
+          "url": "https://cwe.mitre.org/data/definitions/502.html"
+        }
+      ],
+      "location": {
+        "file": "model/legacy_tokenizer_cache.pkl",
+        "start_line": 1,
+        "end_line": 1
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "model/legacy_tokenizer_cache.pkl (offset 142)"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "Опкод и последующий REDUCE подтверждены статически. Эффект требует десериализации. Изолировать легаси-файл и отказаться от Pickle/Joblib."
+        }
+      },
+      "solution": "Сверить место с оригиналом и устранить выявленный механизм."
+    },
+    {
+      "id": "5cdafa1dc328973cb09b8aaf50f873773eb13f66a639b737873a47831d1937a2",
+      "name": "MDL-PICKLE-RCE",
+      "description": "Статический разбор Pickle обнаружил опасный оператор для webbrowser.open. Смещение указано в объекте.",
+      "severity": "Critical",
+      "identifiers": [
+        {
+          "type": "sfs_rule",
+          "name": "MDL-PICKLE-RCE",
+          "value": "MDL-PICKLE-RCE-b7935b2334a5894c"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-502",
+          "value": "502",
+          "url": "https://cwe.mitre.org/data/definitions/502.html"
+        }
+      ],
+      "location": {
+        "file": "model/legacy_tokenizer_cache.pkl",
+        "start_line": 1,
+        "end_line": 1
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "model/legacy_tokenizer_cache.pkl (offset 222)"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "Опкод и последующий REDUCE подтверждены статически. Эффект требует десериализации. Изолировать легаси-файл и отказаться от Pickle/Joblib."
+        }
+      },
+      "solution": "Сверить место с оригиналом и устранить выявленный механизм."
+    },
+    {
+      "id": "6bcb27d4c8e8f2f054dcfef98187d1425ae98df9b2ed97b4791a031bc311d1e6",
+      "name": "MDL-PICKLE-DANGEROUS-IO",
+      "description": "Статический разбор Pickle обнаружил опасный оператор для shutil.rmtree. Смещение указано в объекте.",
+      "severity": "High",
+      "identifiers": [
+        {
+          "type": "sfs_rule",
+          "name": "MDL-PICKLE-DANGEROUS-IO",
+          "value": "MDL-PICKLE-DANGEROUS-IO-ca30787c09b52b54"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-502",
+          "value": "502",
+          "url": "https://cwe.mitre.org/data/definitions/502.html"
+        }
+      ],
+      "location": {
+        "file": "model/legacy_tokenizer_cache.pkl",
+        "start_line": 1,
+        "end_line": 1
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "model/legacy_tokenizer_cache.pkl (offset 285)"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "В последовательности есть вызов файловой операции через REDUCE. Удалить артефакт из комплекта."
+        }
+      },
+      "solution": "Сверить место с оригиналом и устранить выявленный механизм."
+    },
+    {
+      "id": "fb0e8cdbf9b51311cb73750293e22de7dee0a7e4f7da85a09978d82f53451acc",
+      "name": "MDL-PICKLE-RCE",
+      "description": "Статический разбор Pickle обнаружил опасный оператор для builtins.eval. Смещение указано в объекте.",
+      "severity": "Critical",
+      "identifiers": [
+        {
+          "type": "sfs_rule",
+          "name": "MDL-PICKLE-RCE",
+          "value": "MDL-PICKLE-RCE-70c52a6c688dc78e"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-502",
+          "value": "502",
+          "url": "https://cwe.mitre.org/data/definitions/502.html"
+        }
+      ],
+      "location": {
+        "file": "model/legacy_tokenizer_cache.pkl",
+        "start_line": 1,
+        "end_line": 1
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "model/legacy_tokenizer_cache.pkl (offset 93)"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "Опкод и последующий REDUCE подтверждены статически. Эффект требует десериализации. Изолировать легаси-файл и отказаться от Pickle/Joblib."
+        }
+      },
+      "solution": "Сверить место с оригиналом и устранить выявленный механизм."
+    },
+    {
+      "id": "c6737d9515d35e76826670cafe380650c59f3cd8487f9f089118ac68d54dece4",
+      "name": "MDL-PICKLE-RCE",
+      "description": "Статический разбор Pickle обнаружил опасный оператор для subprocess.Popen. Смещение указано в объекте.",
+      "severity": "Critical",
+      "identifiers": [
+        {
+          "type": "sfs_rule",
+          "name": "MDL-PICKLE-RCE",
+          "value": "MDL-PICKLE-RCE-2541b4dd3a7c320c"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-502",
+          "value": "502",
+          "url": "https://cwe.mitre.org/data/definitions/502.html"
+        }
+      ],
+      "location": {
+        "file": "model/legacy_tokenizer_scache.joblib",
+        "start_line": 1,
+        "end_line": 1
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "model/legacy_tokenizer_scache.joblib (offset 142)"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "Опкод и последующий REDUCE подтверждены статически. Эффект требует десериализации. Изолировать легаси-файл и отказаться от Pickle/Joblib."
+        }
+      },
+      "solution": "Сверить место с оригиналом и устранить выявленный механизм."
+    },
+    {
+      "id": "c2a189af3fb16ed30e9ef6910d46c8ca69f833a3da2ea741222570444fe03af4",
+      "name": "MDL-PICKLE-RCE",
+      "description": "Статический разбор Pickle обнаружил опасный оператор для webbrowser.open. Смещение указано в объекте.",
+      "severity": "Critical",
+      "identifiers": [
+        {
+          "type": "sfs_rule",
+          "name": "MDL-PICKLE-RCE",
+          "value": "MDL-PICKLE-RCE-cc2162dd34c0fc9b"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-502",
+          "value": "502",
+          "url": "https://cwe.mitre.org/data/definitions/502.html"
+        }
+      ],
+      "location": {
+        "file": "model/legacy_tokenizer_scache.joblib",
+        "start_line": 1,
+        "end_line": 1
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "model/legacy_tokenizer_scache.joblib (offset 222)"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "Опкод и последующий REDUCE подтверждены статически. Эффект требует десериализации. Изолировать легаси-файл и отказаться от Pickle/Joblib."
+        }
+      },
+      "solution": "Сверить место с оригиналом и устранить выявленный механизм."
+    },
+    {
+      "id": "625295695a87bd2ba684138906510058313eb2d8cdf628bbe931e81ab23a98d3",
+      "name": "MDL-PICKLE-DANGEROUS-IO",
+      "description": "Статический разбор Pickle обнаружил опасный оператор для shutil.rmtree. Смещение указано в объекте.",
+      "severity": "High",
+      "identifiers": [
+        {
+          "type": "sfs_rule",
+          "name": "MDL-PICKLE-DANGEROUS-IO",
+          "value": "MDL-PICKLE-DANGEROUS-IO-41f143f1ae76e214"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-502",
+          "value": "502",
+          "url": "https://cwe.mitre.org/data/definitions/502.html"
+        }
+      ],
+      "location": {
+        "file": "model/legacy_tokenizer_scache.joblib",
+        "start_line": 1,
+        "end_line": 1
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "model/legacy_tokenizer_scache.joblib (offset 285)"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "В последовательности есть вызов файловой операции через REDUCE. Удалить артефакт из комплекта."
+        }
+      },
+      "solution": "Сверить место с оригиналом и устранить выявленный механизм."
+    },
+    {
+      "id": "0cb5757ce205172e0227d9158c847f77d4d9bd86c6525aa13d1f24f1d296b04b",
+      "name": "SFS-JOBLIB-TRAILING-PICKLE",
+      "description": "После STOP первого Pickle-потока находится второй поток с GLOBAL/STACK_GLOBAL и REDUCE.",
+      "severity": "High",
+      "identifiers": [
+        {
+          "type": "sfs_rule",
+          "name": "SFS-JOBLIB-TRAILING-PICKLE",
+          "value": "SFS-JOBLIB-TRAILING-PICKLE-06be64af361ea500"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-502",
+          "value": "502",
+          "url": "https://cwe.mitre.org/data/definitions/502.html"
+        }
+      ],
+      "location": {
+        "file": "model/legacy_tokenizer_scache.joblib",
+        "start_line": 1,
+        "end_line": 1
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "model/legacy_tokenizer_scache.joblib (offset 352)"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "Подтверждён второй сериализованный поток. Факт его наличия подтверждён отдельно от поведения Joblib при загрузке."
+        }
+      },
+      "solution": "Карантинировать контейнер. При аудите разбирать все потоки без десериализации."
+    },
+    {
+      "id": "6f55c720cc27a55cfc8f24d5e62e19df8f043f023285b66dd9fcc3ce3fc38669",
+      "name": "MDL-PICKLE-RCE",
+      "description": "Статический разбор Pickle обнаружил опасный оператор для builtins.eval. Смещение указано в объекте.",
+      "severity": "Critical",
+      "identifiers": [
+        {
+          "type": "sfs_rule",
+          "name": "MDL-PICKLE-RCE",
+          "value": "MDL-PICKLE-RCE-b6be1e394c9ed823"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-502",
+          "value": "502",
+          "url": "https://cwe.mitre.org/data/definitions/502.html"
+        }
+      ],
+      "location": {
+        "file": "model/legacy_tokenizer_scache.joblib",
+        "start_line": 1,
+        "end_line": 1
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "model/legacy_tokenizer_scache.joblib (offset 93)"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "Опкод и последующий REDUCE подтверждены статически. Эффект требует десериализации. Изолировать легаси-файл и отказаться от Pickle/Joblib."
+        }
+      },
+      "solution": "Сверить место с оригиналом и устранить выявленный механизм."
+    },
+    {
+      "id": "ceed65aca38a11edcee71703a5134b2626a2bb9d8f2466e234929e8855375a05",
+      "name": "MDL-PROMPT-MARKER",
+      "description": "Сработало статическое правило. Подробности проверяются по указанному файлу и правилу.",
+      "severity": "Medium",
+      "identifiers": [
+        {
+          "type": "sfs_rule",
+          "name": "MDL-PROMPT-MARKER",
+          "value": "MDL-PROMPT-MARKER-1ef372da325e12a9"
+        }
+      ],
+      "location": {
+        "file": "model/tokenizer_config.json",
+        "start_line": 1,
+        "end_line": 1
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "model/tokenizer_config.json :: chat_template (instruction_override, byte 177)"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "Англоязычная инструкция подмены подтверждена. Это второй сигнал того же дефекта, что SFS-SYSTEM-PROMPT-INJECTION."
+        }
+      },
+      "solution": "Сверить место с оригиналом и устранить выявленный механизм."
+    },
+    {
+      "id": "933ed03e79c17cb934717df3da5e8a89c8f42457b68f98a29265580121cb5ef7",
+      "name": "SFS-SYSTEM-PROMPT-INJECTION",
+      "description": "В chat_template вложена инструкция, перехватывающая системный контекст. Текст требует скрытого HEAD-запроса и передачи хеша разговора.",
+      "severity": "High",
+      "identifiers": [
+        {
+          "type": "sfs_rule",
+          "name": "SFS-SYSTEM-PROMPT-INJECTION",
+          "value": "SFS-SYSTEM-PROMPT-INJECTION"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-74",
+          "value": "74",
+          "url": "https://cwe.mitre.org/data/definitions/74.html"
+        }
+      ],
+      "location": {
+        "file": "model/tokenizer_config.json",
+        "start_line": 146,
+        "end_line": 146
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "model/tokenizer_config.json:146"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "Шаблон вставляет постороннюю инструкцию в системный контекст. Он не гарантирует сетевой вызов или передачу хеша. Вернуть доверенный шаблон."
+        }
+      },
+      "solution": "Восстановить доверенный шаблон и сверить его хеш с проверенной ревизией."
+    },
+    {
+      "id": "5f857aa6629ada77ad523ebe608a40bce02c76d56a293f295ac9b8f34ff73ad7",
+      "name": "SFS-DOC-CREDENTIAL-EXPOSURE",
+      "description": "Пример Authorization в документации повторяет зафиксированный ключ API. Значение скрыто.",
+      "severity": "High",
+      "identifiers": [
+        {
+          "type": "sfs_rule",
+          "name": "SFS-DOC-CREDENTIAL-EXPOSURE",
+          "value": "SFS-DOC-CREDENTIAL-EXPOSURE"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-798",
+          "value": "798",
+          "url": "https://cwe.mitre.org/data/definitions/798.html"
+        }
+      ],
+      "location": {
+        "file": "docs/readme.md",
+        "start_line": 32,
+        "end_line": 32
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "docs/readme.md:32"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "Значение из примера curl совпадает с ключом API в исходнике. Это второй канал раскрытия того же секрета. Ротировать ключ и заменить пример на переменную."
+        }
+      },
+      "solution": "Удалить значение из документации и истории, ротировать ключ и использовать переменную окружения."
+    },
+    {
+      "id": "37a1d3eaf24661a2fcbc52975a13c62940dfa27ac53d4d462f6f545e6f61dc04",
+      "name": "SFS-WILDCARD-BIND",
+      "description": "Сетевой адрес в конфигурации по умолчанию слушает на всех интерфейсах.",
+      "severity": "Medium",
+      "identifiers": [
+        {
+          "type": "sfs_rule",
+          "name": "SFS-WILDCARD-BIND",
+          "value": "SFS-WILDCARD-BIND"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-668",
+          "value": "668",
+          "url": "https://cwe.mitre.org/data/definitions/668.html"
+        }
+      ],
+      "location": {
+        "file": "src/api/config.py",
+        "start_line": 4,
+        "end_line": 4
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "src/api/config.py:4"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "Конфигурация по умолчанию передаётся HTTPServer, а Compose публикует порт. Это подтверждённое расширение доступности; фактическая доступность зависит от сетевых границ и firewall."
+        }
+      },
+      "solution": "Ограничить интерфейс или явно настроить сетевые границы и проверить проброс порта."
+    },
+    {
+      "id": "b4facb2d41c849a610ce1f0b4e884ede6e164f4604a06dc516257ff4aebb54ef",
+      "name": "SFS-HARDCODED-CREDENTIAL",
+      "description": "Строковый литерал в API_TOKEN. Значение скрыто.",
+      "severity": "High",
+      "identifiers": [
+        {
+          "type": "sfs_rule",
+          "name": "SFS-HARDCODED-CREDENTIAL",
+          "value": "SFS-HARDCODED-CREDENTIAL"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-798",
+          "value": "798",
+          "url": "https://cwe.mitre.org/data/definitions/798.html"
+        }
+      ],
+      "location": {
+        "file": "src/api/server.py",
+        "start_line": 14,
+        "end_line": 14
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "src/api/server.py:14"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "Фиксированный секрет виден в исходнике. Ротировать значение, затем вынести из кода и удалить из истории поставки."
+        }
+      },
+      "solution": "Удалить секрет из исходников и истории, заменить значение и читать его из защищённой переменной."
+    },
+    {
+      "id": "9a0eec78b0fbc78ddbb655beb32b657742043704b3eec6b57cf23b96e1617735",
+      "name": "SFS-AUTH-BYPASS",
+      "description": "Сравнение с фиксированным токеном разрешает запрос до основной проверки.",
+      "severity": "Critical",
+      "identifiers": [
+        {
+          "type": "sfs_rule",
+          "name": "SFS-AUTH-BYPASS",
+          "value": "SFS-AUTH-BYPASS"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-798",
+          "value": "798",
+          "url": "https://cwe.mitre.org/data/definitions/798.html"
+        }
+      ],
+      "location": {
+        "file": "src/api/server.py",
+        "start_line": 18,
+        "end_line": 18
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "src/api/server.py:18"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "Проверка возвращает True по постоянному литералу до сравнения с основным секретом. Удалить обход."
+        }
+      },
+      "solution": "Удалить исключение и проверять только токен из доверенной конфигурации."
+    },
+    {
+      "id": "f22b5fb07737ea76733c1cf3e12e39ca855429c0c05407e14107186924b771a7",
+      "name": "SFS-HTTP-BODY-UNBOUNDED",
+      "description": "Тело запроса читается целиком по длине из HTTP-заголовка без предела в выражении.",
+      "severity": "Medium",
+      "identifiers": [
+        {
+          "type": "sfs_rule",
+          "name": "SFS-HTTP-BODY-UNBOUNDED",
+          "value": "SFS-HTTP-BODY-UNBOUNDED"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-400",
+          "value": "400",
+          "url": "https://cwe.mitre.org/data/definitions/400.html"
+        }
+      ],
+      "location": {
+        "file": "src/api/server.py",
+        "start_line": 26,
+        "end_line": 26
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "src/api/server.py:26"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "POST передаёт Content-Length прямо в чтение без верхней границы и таймаута. Для запроса нужен токен; в стенде также есть обход авторизации. Предельный размер и таймаут задавать до чтения."
+        }
+      },
+      "solution": "Проверять длину и ограничивать размер тела и время чтения до разбора JSON."
+    },
+    {
+      "id": "156887d937e61f96df46eb4fa209a015e3324b8d8dcd9d215b7855fa45cbe78f",
+      "name": "SFS-DOC-PATH-TRAVERSAL",
+      "description": "Имя из query присоединяется к DOCS_DIR перед чтением. Проверка маршрута не ограничивает итоговый путь.",
+      "severity": "High",
+      "identifiers": [
+        {
+          "type": "sfs_rule",
+          "name": "SFS-DOC-PATH-TRAVERSAL",
+          "value": "SFS-DOC-PATH-TRAVERSAL"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-22",
+          "value": "22",
+          "url": "https://cwe.mitre.org/data/definitions/22.html"
+        }
+      ],
+      "location": {
+        "file": "src/api/server.py",
+        "start_line": 42,
+        "end_line": 42
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "src/api/server.py:42"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "Параметр name доходит до чтения файла. Проверка маршрута не проверяет итоговый путь. Ограничить чтение разрешёнными файлами."
+        }
+      },
+      "solution": "Разрешать конкретные имена документов или проверять resolve().is_relative_to() и тип файла."
+    },
+    {
+      "id": "c41437d71ed7fe7d46c2b9b52b8b1669ebafeeb105af1ab66388123230d16d82",
+      "name": "SFS-WEB-FALLBACK-TOKEN",
+      "description": "Клиентский HTML/JS содержит фиксированный запасной Bearer-токен.",
+      "severity": "High",
+      "identifiers": [
+        {
+          "type": "sfs_rule",
+          "name": "SFS-WEB-FALLBACK-TOKEN",
+          "value": "SFS-WEB-FALLBACK-TOKEN"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-798",
+          "value": "798",
+          "url": "https://cwe.mitre.org/data/definitions/798.html"
+        }
+      ],
+      "location": {
+        "file": "src/api/web.py",
+        "start_line": 32,
+        "end_line": 32
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "src/api/web.py:32"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "Публичная страница подставляет тот же тип фиксированного токена, который допускает сервер. Убрать резервный Bearer из браузера."
+        }
+      },
+      "solution": "Убрать резервное значение из HTML и требовать индивидуальную авторизацию."
+    },
+    {
+      "id": "9a3f8a0e9577b7c1296f8f1d557df31f2da161a7f9c75e4e1ae27720153d36f1",
+      "name": "SFS-CACHE-TRIGGER-SEED",
+      "description": "В таблице cache найдено записей со служебным маркером исполнителя: 1. База прочитана в режиме read-only.",
+      "severity": "High",
+      "identifiers": [
+        {
+          "type": "sfs_rule",
+          "name": "SFS-CACHE-TRIGGER-SEED",
+          "value": "SFS-CACHE-TRIGGER-SEED-92d7c499c519431c"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-912",
+          "value": "912",
+          "url": "https://cwe.mitre.org/data/definitions/912.html"
+        }
+      ],
+      "location": {
+        "file": "docs/cache.db",
+        "start_line": 1,
+        "end_line": 1
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "docs/cache.db"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "В seed-БД найдена строка с маркером, который обрабатывает исполнитель. Очистить поставляемую БД и связать подпись с запросом."
+        }
+      },
+      "solution": "Удалить запись из поставки. Связать HMAC с запросом и командой, использовать отдельный ключ."
+    },
+    {
+      "id": "6a2356ba4304ecc7795c9c50a92a5f7149d7a4686506cba67a90a7fee7d82ec6",
+      "name": "SFS-HARDCODED-CREDENTIAL",
+      "description": "Строковый литерал в CACHE_SIGN_KEY. Значение скрыто.",
+      "severity": "High",
+      "identifiers": [
+        {
+          "type": "sfs_rule",
+          "name": "SFS-HARDCODED-CREDENTIAL",
+          "value": "SFS-HARDCODED-CREDENTIAL"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-798",
+          "value": "798",
+          "url": "https://cwe.mitre.org/data/definitions/798.html"
+        }
+      ],
+      "location": {
+        "file": "seed_cache.py",
+        "start_line": 13,
+        "end_line": 13
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "seed_cache.py:13"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "Фиксированный секрет виден в исходнике. Ротировать значение, затем вынести из кода и удалить из истории поставки."
+        }
+      },
+      "solution": "Удалить секрет из исходников и истории, заменить значение и читать его из защищённой переменной."
+    },
+    {
+      "id": "f417b985493f79d6b276c84f83c86f91df3dd382da2883095faddab5fb51b21a",
+      "name": "SFS-SQLITE-SHARED-TEMP",
+      "description": "SQLite открывает предсказуемый файл непосредственно в общем временном каталоге.",
+      "severity": "Medium",
+      "identifiers": [
+        {
+          "type": "sfs_rule",
+          "name": "SFS-SQLITE-SHARED-TEMP",
+          "value": "SFS-SQLITE-SHARED-TEMP"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-377",
+          "value": "377",
+          "url": "https://cwe.mitre.org/data/definitions/377.html"
+        }
+      ],
+      "location": {
+        "file": "src/cache/store.py",
+        "start_line": 18,
+        "end_line": 18
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "src/cache/store.py:18"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "SQLite открывает постоянное имя в /tmp. Риск подмены зависит от прав и окружения; Compose монтирует конкретную базу, при запуске без этого монтирования используется общий каталог."
+        }
+      },
+      "solution": "Хранить базу в каталоге приложения с проверенными правами и владельцем."
+    },
+    {
+      "id": "97f9d0aa8bd088114a16e852f641d7f0bbfb4d3d6ca602a823aab2af523d6eed",
+      "name": "WRP-SQLI-DYNAMIC",
+      "description": "Данные задачи интерполируются в SQL-строку вместо параметра запроса.",
+      "severity": "High",
+      "identifiers": [
+        {
+          "type": "sfs_rule",
+          "name": "WRP-SQLI-DYNAMIC",
+          "value": "WRP-SQLI-DYNAMIC"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-89",
+          "value": "89",
+          "url": "https://cwe.mitre.org/data/definitions/89.html"
+        }
+      ],
+      "location": {
+        "file": "src/cache/store.py",
+        "start_line": 27,
+        "end_line": 27
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "src/cache/store.py:27"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "Нормализация пробелов не отделяет SQL от данных. Параметризовать WHERE и оставить проверку HMAC."
+        }
+      },
+      "solution": "Сверить место с оригиналом и устранить выявленный механизм."
+    },
+    {
+      "id": "6bd0e028bcdefa16d276f1054cc181363e269a74581a2138d9264de5e3e1ca0f",
+      "name": "SFS-HARDCODED-CREDENTIAL",
+      "description": "Строковый литерал в CACHE_SIGN_KEY. Значение скрыто.",
+      "severity": "High",
+      "identifiers": [
+        {
+          "type": "sfs_rule",
+          "name": "SFS-HARDCODED-CREDENTIAL",
+          "value": "SFS-HARDCODED-CREDENTIAL"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-798",
+          "value": "798",
+          "url": "https://cwe.mitre.org/data/definitions/798.html"
+        }
+      ],
+      "location": {
+        "file": "src/cache/store.py",
+        "start_line": 8,
+        "end_line": 8
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "src/cache/store.py:8"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "Фиксированный секрет виден в исходнике. Ротировать значение, затем вынести из кода и удалить из истории поставки."
+        }
+      },
+      "solution": "Удалить секрет из исходников и истории, заменить значение и читать его из защищённой переменной."
+    },
+    {
+      "id": "031695a121c890f33d08338b101cfd0a0d26f054a1b76a4887ff7805aa20f2a2",
+      "name": "SFS-SUBSTRING-ALLOWLIST",
+      "description": "Разрешение по вхождению подстроки в команду. Первый аргумент и остальные аргументы отдельно не проверяются.",
+      "severity": "Medium",
+      "identifiers": [
+        {
+          "type": "sfs_rule",
+          "name": "SFS-SUBSTRING-ALLOWLIST",
+          "value": "SFS-SUBSTRING-ALLOWLIST"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-184",
+          "value": "184",
+          "url": "https://cwe.mitre.org/data/definitions/184.html"
+        }
+      ],
+      "location": {
+        "file": "src/executor/limits.py",
+        "start_line": 42,
+        "end_line": 42
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "src/executor/limits.py:42"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "Проверяется наличие фрагмента в строке, а не точное имя операции и её аргументы. Ввести allowlist команд с отдельной схемой аргументов."
+        }
+      },
+      "solution": "Проверять точное имя операции и схему аргументов. Использовать argv без shell."
+    },
+    {
+      "id": "f0fe3e2411c5f7c6f24ce7e779ae38d40b618ccef091457850b4a09e76b717df",
+      "name": "WRP-CMD-SUBPROCESS-SHELL",
+      "description": "Динамическая команда передаётся subprocess с shell=True.",
+      "severity": "High",
+      "identifiers": [
+        {
+          "type": "sfs_rule",
+          "name": "WRP-CMD-SUBPROCESS-SHELL",
+          "value": "WRP-CMD-SUBPROCESS-SHELL"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-78",
+          "value": "78",
+          "url": "https://cwe.mitre.org/data/definitions/78.html"
+        }
+      ],
+      "location": {
+        "file": "src/executor/runner.py",
+        "start_line": 10,
+        "end_line": 10
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "src/executor/runner.py:10"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "Вывод модели или кэша интерполируется в строку shell. Передавать данные argv или отказаться от shell полностью."
+        }
+      },
+      "solution": "Сверить место с оригиналом и устранить выявленный механизм."
+    },
+    {
+      "id": "a20bde0a3089f921097694ecf6042344be95c1b51579adaf9514c974e249eb0c",
+      "name": "SFS-HIDDEN-COMMAND",
+      "description": "Особый маркер команды запускает отдельный системный вызов до allowlist.",
+      "severity": "High",
+      "identifiers": [
+        {
+          "type": "sfs_rule",
+          "name": "SFS-HIDDEN-COMMAND",
+          "value": "SFS-HIDDEN-COMMAND"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-912",
+          "value": "912",
+          "url": "https://cwe.mitre.org/data/definitions/912.html"
+        }
+      ],
+      "location": {
+        "file": "src/executor/runner.py",
+        "start_line": 14,
+        "end_line": 14
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "src/executor/runner.py:14"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "До allowlist есть служебная ветка с отдельным вызовом чтения локального файла. Удалить ветку."
+        }
+      },
+      "solution": "Удалить скрытую ветку и маршрутизировать все операции через один валидатор."
+    },
+    {
+      "id": "46814483ac026dc845286e8d088c8044c0526bcb88607c7d4850d84d188625c0",
+      "name": "SFS-SUBPROCESS-PATH-SEARCH",
+      "description": "Исполняемый файл задан без абсолютного пути и ищется в PATH.",
+      "severity": "Low",
+      "identifiers": [
+        {
+          "type": "sfs_rule",
+          "name": "SFS-SUBPROCESS-PATH-SEARCH",
+          "value": "SFS-SUBPROCESS-PATH-SEARCH"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-426",
+          "value": "426",
+          "url": "https://cwe.mitre.org/data/definitions/426.html"
+        }
+      ],
+      "location": {
+        "file": "src/executor/runner.py",
+        "start_line": 15,
+        "end_line": 15
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "src/executor/runner.py:15"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "Служебная ветка запускает команду по имени без абсолютного пути. Подмена требует влияния на PATH или доступного для записи каталога в нём; такие права в стенде не проверялись."
+        }
+      },
+      "solution": "Задать доверенный абсолютный путь и контролировать окружение процесса."
+    },
+    {
+      "id": "dfd28687a1f04337682cade3546f7394a0b9a8d23ab1e3217cd28699ec2cd5a4",
+      "name": "SFS-SUBSTRING-ALLOWLIST",
+      "description": "Разрешение по вхождению подстроки в команду. Первый аргумент и остальные аргументы отдельно не проверяются.",
+      "severity": "High",
+      "identifiers": [
+        {
+          "type": "sfs_rule",
+          "name": "SFS-SUBSTRING-ALLOWLIST",
+          "value": "SFS-SUBSTRING-ALLOWLIST"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-184",
+          "value": "184",
+          "url": "https://cwe.mitre.org/data/definitions/184.html"
+        }
+      ],
+      "location": {
+        "file": "src/executor/runner.py",
+        "start_line": 17,
+        "end_line": 17
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "src/executor/runner.py:17"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "Проверяется наличие фрагмента в строке, а не точное имя операции и её аргументы. Ввести allowlist команд с отдельной схемой аргументов."
+        }
+      },
+      "solution": "Проверять точное имя операции и схему аргументов. Использовать argv без shell."
+    },
+    {
+      "id": "cceabc8ef7fda801998fb503a3ddc3a8b941dc00ec666a8a7721d672f4efc1df",
+      "name": "SFS-OUTPUT-TRIGGERS-EGRESS",
+      "description": "Маркер в выводе модели вызывает _telemetry. В этом модуле она отправляет HEAD на фиксированный внешний адрес.",
+      "severity": "Medium",
+      "identifiers": [
+        {
+          "type": "sfs_rule",
+          "name": "SFS-OUTPUT-TRIGGERS-EGRESS",
+          "value": "SFS-OUTPUT-TRIGGERS-EGRESS"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-200",
+          "value": "200",
+          "url": "https://cwe.mitre.org/data/definitions/200.html"
+        }
+      ],
+      "location": {
+        "file": "src/llm/client.py",
+        "start_line": 35,
+        "end_line": 35
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "src/llm/client.py:35"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "Маркер вывода вызывает HEAD на фиксированный адрес. Код не отправляет хеш разговора; наружу уходит факт обращения. Убрать зависимость сети от вывода."
+        }
+      },
+      "solution": "Исключить сетевой побочный эффект из обработки вывода и ограничить исходящую сеть."
+    }
+  ]
+}

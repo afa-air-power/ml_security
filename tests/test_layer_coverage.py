@@ -6,10 +6,11 @@ import tempfile
 import unittest
 import zipfile
 from pathlib import Path
+from unittest.mock import patch
 
 from backend.report import build_safetensors_bytes
 from backend.scanners import model
-from backend.weight_points import STAT_SAMPLE_SIZE, FloatTensorValues, weight_statistics
+from backend.weight_stream import STAT_SAMPLE_SIZE, FloatTensorValues, weight_statistics
 
 
 def npy_bytes(values, shape, fortran_order=False):
@@ -90,7 +91,7 @@ class LayerCoverageTests(unittest.TestCase):
                 findings = self.scan_bytes(filename, payload)
                 point = next(item["point"] for item in findings if item["id"] == "MDL-BACKDOOR-OUTLIER")
                 self.assertEqual(point["coordinates"], [100_008])
-                self.assertEqual(point["metrics"]["sample_size"], 100_009)
+                self.assertEqual(point["metrics"]["values_inspected"], 100_009)
 
     def test_json_keeps_nested_layers_with_same_parameter_names(self):
         matrix = [[0.1] * 8 for _ in range(8)]
@@ -119,6 +120,42 @@ class LayerCoverageTests(unittest.TestCase):
             "encoder.middle.weight": ("F32", [512, 256], values),
         }))
         self.assertFalse(any(item["id"].startswith("MDL-BACKDOOR-") for item in findings))
+
+    def test_full_pytorch_walk_keeps_archive_budget_after_32_storages(self):
+        archive = io.BytesIO()
+        with zipfile.ZipFile(archive, "w") as zf:
+            zf.writestr("archive/data.pkl", b"\x80\x04}.")
+            for index in range(64):
+                zf.writestr(f"archive/data/{index}", struct.pack("<16f", *([0.1] * 16)))
+        with patch("backend.archive_limits.MAX_ARCHIVE_READ", 2096):
+            findings = self.scan_bytes("model.pt", archive.getvalue())
+        self.assertIn("MDL-ARCHIVE-REJECTED", {item["id"] for item in findings})
+
+    def test_full_numpy_walk_keeps_archive_member_limit(self):
+        archive = io.BytesIO()
+        with zipfile.ZipFile(archive, "w") as zf:
+            zf.writestr("hidden.npy", npy_bytes([0.1] * 100, [100]))
+        with patch("backend.archive_limits.MAX_MEMBER_READ", 256):
+            findings = self.scan_bytes("model.npz", archive.getvalue())
+        self.assertIn("MDL-ARCHIVE-REJECTED", {item["id"] for item in findings})
+
+    def test_safetensors_budget_preserves_total_for_skipped_hidden_tensor(self):
+        data = build_safetensors_bytes({
+            "encoder.early.weight": ("F32", [4], [0.1] * 4),
+            "encoder.middle.weight": ("F32", [4], [0.1] * 4),
+        })
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "model.safetensors"
+            path.write_bytes(data)
+            with patch("backend.scanners.model.MAX_FLOAT_BYTES", 16):
+                result = model.scan(path)
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(result["weight_coverage"], {
+            "values_total": 8, "values_inspected": 4, "tensors_total": 2, "tensors_inspected": 1,
+        })
+        finding, = result["findings"]
+        self.assertEqual(finding["id"], "MDL-WEIGHT-SAMPLED")
+        self.assertIn("encoder.middle.weight", finding["object"])
 
     def test_streaming_reads_and_quantile_memory_stay_bounded(self):
         class BoundedReader(io.BytesIO):

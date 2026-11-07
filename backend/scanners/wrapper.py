@@ -604,7 +604,7 @@ def _scan_generic_patterns(
 
 
 def _run_external_bandit(wrapper_dir: Path, findings: list[dict[str, Any]]) -> None:
-    """Дополнительный запуск bandit (если установлен в окружении) с дедупликацией по строкам."""
+    """Добавляет сигналы Bandit без исходных строк и с дедупликацией по правилу."""
     bandit_bin = shutil.which("bandit") if os.environ.get("MLSEC_BANDIT") != "0" else None
     if not bandit_bin:
         return
@@ -619,25 +619,33 @@ def _run_external_bandit(wrapper_dir: Path, findings: list[dict[str, Any]]) -> N
         if not proc.stdout.strip().startswith("{"):
             return
         data = json.loads(proc.stdout)
-        covered_lines = {f["object"] for f in findings}
+        covered = {(f["object"], f["id"]) for f in findings}
         sev_map = {"HIGH": "high", "MEDIUM": "medium", "LOW": "low"}
+        equivalents = {
+            "B105": "WRP-SECRET-001", "B324": "WRP-CRYPTO-WEAK-HASH",
+            "B602": "WRP-CMD-SUBPROCESS-SHELL", "B608": "WRP-SQLI-DYNAMIC",
+        }
 
         for item in data.get("results", []):
             fname = Path(item.get("filename", ""))
+            if not fname.resolve().is_relative_to(wrapper_dir.resolve()):
+                continue
             rel = _rel_path(fname, wrapper_dir)
             lineno = item.get("line_number", 1)
             loc = f"{rel}:{lineno}"
-            if loc in covered_lines:
+            test_id = item.get("test_id", "")
+            if not isinstance(test_id, str) or not re.fullmatch(r"B[0-9]{3}", test_id):
                 continue
-            test_id = item.get("test_id", "B000")
-            issue_text = item.get("issue_text", "Потенциальная уязвимость SAST")
-            code_line = (item.get("code") or "").strip().splitlines()[0] if item.get("code") else ""
+            rule = f"WRP-BANDIT-{test_id}"
+            if (loc, equivalents.get(test_id)) in covered or (loc, rule) in covered:
+                continue
+            covered.add((loc, rule))
             sev = sev_map.get(str(item.get("issue_severity", "MEDIUM")).upper(), "medium")
             findings.append(
                 _make_finding(
-                    rule_id=f"WRP-BANDIT-{test_id}",
+                    rule_id=rule,
                     obj=loc,
-                    evidence=f"{issue_text}: `{code_line}`",
+                    evidence=f"Bandit обнаружил конструкцию по правилу {test_id}. Исходная строка исключена.",
                     severity=sev,
                     status="needs_review",
                     decision="Проверить срабатывание правила Bandit и устранить небезопасную конструкцию.",
