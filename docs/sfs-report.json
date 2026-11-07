@@ -14,22 +14,22 @@
       "matches_reference": true
     }
   },
-  "generated_at": "2026-11-07T19:59:03.563412+00:00",
+  "generated_at": "2026-11-07T20:28:35.380765+00:00",
   "summary": {
     "overall_status": "passed",
     "gate_passed": true,
     "gate_reason": "У каждой находки есть решение триажа. Подтверждённые уязвимости остаются в отчёте.",
-    "total_findings": 50,
+    "total_findings": 64,
     "blocking_findings_count": 0,
     "by_severity": {
       "critical": 10,
-      "high": 22,
+      "high": 36,
       "low": 2,
       "medium": 16
     },
     "by_status": {
       "true_positive": 48,
-      "false_positive": 2,
+      "false_positive": 16,
       "accepted_risk": 0,
       "unresolved": 0
     }
@@ -39,13 +39,7 @@
       "id": "model",
       "status": "ok",
       "message": "Проверка model: ok.",
-      "warnings": [
-        {
-          "code": "SAMPLED_WEIGHTS",
-          "blocking": false,
-          "message": "Статистика по 211 тензорам ограничена префиксом или численным диапазоном."
-        }
-      ],
+      "warnings": [],
       "findings": [
         {
           "id": "SFS-DEP-DOCKER-CVE-2024-35195",
@@ -292,6 +286,537 @@
           "comment": "Опкод и последующий REDUCE подтверждены статически. Эффект требует десериализации. Изолировать легаси-файл и отказаться от Pickle/Joblib."
         },
         {
+          "id": "MDL-BACKDOOR-NEURON",
+          "contour": "model",
+          "category": "weight_backdoor",
+          "object": "model/model.safetensors :: тензор 'model.layers.0.self_attn.o_proj.weight' (нейрон/канал #260, shape=[576, 576])",
+          "evidence": "Статический сигнал. Числовые метрики и координаты доступны в point.",
+          "severity": "high",
+          "status": "false_positive",
+          "decision": "Сверить место с оригиналом и устранить выявленный механизм.",
+          "point": {
+            "tensor": "model.layers.0.self_attn.o_proj.weight",
+            "kind": "row_norm",
+            "index": 260,
+            "coordinates": [
+              260
+            ],
+            "value": 6.641622818919843,
+            "metrics": {
+              "row_norm": 6.641622818919843,
+              "median_row_norm": 1.456042418056046,
+              "ratio": 4.5614212447100515
+            },
+            "thresholds": {
+              "ratio": 4.5,
+              "row_norm": 3.0
+            }
+          },
+          "key": "f36405a7e35ca953f0fa17f61c475bbf53e01fb161cd1bb90c93dcd91ca75300",
+          "scope": "model",
+          "comment": "Статистическая аномалия в координатах [260] присутствует в файле с SHA-256 опубликованного эталона SmolLM2. Подмена весов в конкурсной поставке по этому признаку не подтверждена."
+        },
+        {
+          "id": "MDL-BACKDOOR-OUTLIER",
+          "contour": "model",
+          "category": "weight_backdoor",
+          "object": "model/model.safetensors :: тензор 'model.layers.0.self_attn.q_proj.weight' (elements=331776)",
+          "evidence": "Статический сигнал. Числовые метрики и координаты доступны в point.",
+          "severity": "high",
+          "status": "false_positive",
+          "decision": "Сверить место с оригиналом и устранить выявленный механизм.",
+          "point": {
+            "tensor": "model.layers.0.self_attn.q_proj.weight",
+            "kind": "peak",
+            "index": 124100,
+            "coordinates": [
+              215,
+              260
+            ],
+            "value": 5.25,
+            "metrics": {
+              "abs_peak": 5.25,
+              "z_score_max": 18.56771677643209,
+              "robust_z": 28.02135762589059,
+              "mad": 0.1263580322265625,
+              "ratio_to_p99": 5.463414634146342,
+              "sample_size": 15799,
+              "values_inspected": 331776
+            },
+            "thresholds": {
+              "z_score_max": 8.5,
+              "robust_z": 12.0,
+              "kurtosis": 60.0,
+              "ratio_to_p99": 4.0,
+              "abs_peak": 5.0
+            },
+            "triggered_rules": [
+              "classic_peak",
+              "robust_peak"
+            ]
+          },
+          "key": "9a19c8c9cadd1da55b52c6ef0f19d5772af32c301ae7d33774c6ef2d8b27b412",
+          "scope": "model",
+          "comment": "Статистическая аномалия в координатах [215, 260] присутствует в файле с SHA-256 опубликованного эталона SmolLM2. Подмена весов в конкурсной поставке по этому признаку не подтверждена."
+        },
+        {
+          "id": "MDL-BACKDOOR-OUTLIER",
+          "contour": "model",
+          "category": "weight_backdoor",
+          "object": "model/model.safetensors :: тензор 'model.layers.11.mlp.down_proj.weight' (elements=884736)",
+          "evidence": "Статический сигнал. Числовые метрики и координаты доступны в point.",
+          "severity": "high",
+          "status": "false_positive",
+          "decision": "Сверить место с оригиналом и устранить выявленный механизм.",
+          "point": {
+            "tensor": "model.layers.11.mlp.down_proj.weight",
+            "kind": "peak",
+            "index": 780239,
+            "coordinates": [
+              507,
+              1487
+            ],
+            "value": 6.0625,
+            "metrics": {
+              "abs_peak": 6.0625,
+              "z_score_max": 30.53476371848199,
+              "robust_z": 31.912743553914908,
+              "mad": 0.12813997268676758,
+              "ratio_to_p99": 11.00709219858156,
+              "sample_size": 16384,
+              "values_inspected": 884736
+            },
+            "thresholds": {
+              "z_score_max": 8.5,
+              "robust_z": 12.0,
+              "kurtosis": 60.0,
+              "ratio_to_p99": 4.0,
+              "abs_peak": 5.0
+            },
+            "triggered_rules": [
+              "classic_peak",
+              "robust_peak"
+            ]
+          },
+          "key": "ec0dfad1c1f936d853539953c804be25f170b5ce4e73fea253172169b2986631",
+          "scope": "model",
+          "comment": "Статистическая аномалия в координатах [507, 1487] присутствует в файле с SHA-256 опубликованного эталона SmolLM2. Подмена весов в конкурсной поставке по этому признаку не подтверждена."
+        },
+        {
+          "id": "MDL-BACKDOOR-OUTLIER",
+          "contour": "model",
+          "category": "weight_backdoor",
+          "object": "model/model.safetensors :: тензор 'model.layers.2.mlp.down_proj.weight' (elements=884736)",
+          "evidence": "Статический сигнал. Числовые метрики и координаты доступны в point.",
+          "severity": "high",
+          "status": "false_positive",
+          "decision": "Сверить место с оригиналом и устранить выявленный механизм.",
+          "point": {
+            "tensor": "model.layers.2.mlp.down_proj.weight",
+            "kind": "peak",
+            "index": 779182,
+            "coordinates": [
+              507,
+              430
+            ],
+            "value": -5.3125,
+            "metrics": {
+              "abs_peak": 5.3125,
+              "z_score_max": 29.190105621248698,
+              "robust_z": 30.022376442568973,
+              "mad": 0.11932754516601562,
+              "ratio_to_p99": 11.10204081632653,
+              "sample_size": 16384,
+              "values_inspected": 884736
+            },
+            "thresholds": {
+              "z_score_max": 8.5,
+              "robust_z": 12.0,
+              "kurtosis": 60.0,
+              "ratio_to_p99": 4.0,
+              "abs_peak": 5.0
+            },
+            "triggered_rules": [
+              "classic_peak",
+              "robust_peak"
+            ]
+          },
+          "key": "f636e6ec78cdb9970f89d8ee8e7f6d47c9a552dbc20fe439b8c1066f2d113d78",
+          "scope": "model",
+          "comment": "Статистическая аномалия в координатах [507, 430] присутствует в файле с SHA-256 опубликованного эталона SmolLM2. Подмена весов в конкурсной поставке по этому признаку не подтверждена."
+        },
+        {
+          "id": "MDL-BACKDOOR-NEURON",
+          "contour": "model",
+          "category": "weight_backdoor",
+          "object": "model/model.safetensors :: тензор 'model.layers.24.self_attn.o_proj.weight' (нейрон/канал #17, shape=[576, 576])",
+          "evidence": "Статический сигнал. Числовые метрики и координаты доступны в point.",
+          "severity": "high",
+          "status": "false_positive",
+          "decision": "Сверить место с оригиналом и устранить выявленный механизм.",
+          "point": {
+            "tensor": "model.layers.24.self_attn.o_proj.weight",
+            "kind": "row_norm",
+            "index": 17,
+            "coordinates": [
+              17
+            ],
+            "value": 26.13051360305526,
+            "metrics": {
+              "row_norm": 26.13051360305526,
+              "median_row_norm": 4.972010188375131,
+              "ratio": 5.255522940027361
+            },
+            "thresholds": {
+              "ratio": 4.5,
+              "row_norm": 3.0
+            }
+          },
+          "key": "91902f5f5b45fc86cb9c1db7032aa38234b88fec87183d7a5e31cbbae50983c7",
+          "scope": "model",
+          "comment": "Статистическая аномалия в координатах [17] присутствует в файле с SHA-256 опубликованного эталона SmolLM2. Подмена весов в конкурсной поставке по этому признаку не подтверждена."
+        },
+        {
+          "id": "MDL-BACKDOOR-OUTLIER",
+          "contour": "model",
+          "category": "weight_backdoor",
+          "object": "model/model.safetensors :: тензор 'model.layers.27.mlp.gate_proj.weight' (elements=884736)",
+          "evidence": "Статический сигнал. Числовые метрики и координаты доступны в point.",
+          "severity": "high",
+          "status": "false_positive",
+          "decision": "Сверить место с оригиналом и устранить выявленный механизм.",
+          "point": {
+            "tensor": "model.layers.27.mlp.gate_proj.weight",
+            "kind": "peak",
+            "index": 520388,
+            "coordinates": [
+              903,
+              260
+            ],
+            "value": -9.25,
+            "metrics": {
+              "abs_peak": 9.25,
+              "z_score_max": 51.49840649130017,
+              "robust_z": 52.804420392549304,
+              "mad": 0.11816787719726562,
+              "ratio_to_p99": 19.17408906882591,
+              "sample_size": 16384,
+              "values_inspected": 884736,
+              "kurtosis": 23.180992608354355
+            },
+            "thresholds": {
+              "z_score_max": 8.5,
+              "robust_z": 12.0,
+              "kurtosis": 60.0,
+              "ratio_to_p99": 4.0,
+              "abs_peak": 5.0
+            },
+            "triggered_rules": [
+              "classic_peak",
+              "robust_peak"
+            ]
+          },
+          "key": "e06cbbb4d948296f2578c9254d8f57226d8f43db76aeda1aae22e879b5781cc1",
+          "scope": "model",
+          "comment": "Статистическая аномалия в координатах [903, 260] присутствует в файле с SHA-256 опубликованного эталона SmolLM2. Подмена весов в конкурсной поставке по этому признаку не подтверждена."
+        },
+        {
+          "id": "MDL-BACKDOOR-NEURON",
+          "contour": "model",
+          "category": "weight_backdoor",
+          "object": "model/model.safetensors :: тензор 'model.layers.27.mlp.gate_proj.weight' (нейрон/канал #903, shape=[1536, 576])",
+          "evidence": "Статический сигнал. Числовые метрики и координаты доступны в point.",
+          "severity": "high",
+          "status": "false_positive",
+          "decision": "Сверить место с оригиналом и устранить выявленный механизм.",
+          "point": {
+            "tensor": "model.layers.27.mlp.gate_proj.weight",
+            "kind": "row_norm",
+            "index": 903,
+            "coordinates": [
+              903
+            ],
+            "value": 23.546645531640195,
+            "metrics": {
+              "row_norm": 23.546645531640195,
+              "median_row_norm": 4.042673012734842,
+              "ratio": 5.824523887404646
+            },
+            "thresholds": {
+              "ratio": 4.5,
+              "row_norm": 3.0
+            }
+          },
+          "key": "ef96790153a87aef086d4d11ae8fc37a1c70ba5b2d7ae99f36ce254138dcc8c4",
+          "scope": "model",
+          "comment": "Статистическая аномалия в координатах [903] присутствует в файле с SHA-256 опубликованного эталона SmolLM2. Подмена весов в конкурсной поставке по этому признаку не подтверждена."
+        },
+        {
+          "id": "MDL-BACKDOOR-OUTLIER",
+          "contour": "model",
+          "category": "weight_backdoor",
+          "object": "model/model.safetensors :: тензор 'model.layers.27.mlp.up_proj.weight' (elements=884736)",
+          "evidence": "Статический сигнал. Числовые метрики и координаты доступны в point.",
+          "severity": "high",
+          "status": "false_positive",
+          "decision": "Сверить место с оригиналом и устранить выявленный механизм.",
+          "point": {
+            "tensor": "model.layers.27.mlp.up_proj.weight",
+            "kind": "peak",
+            "index": 520481,
+            "coordinates": [
+              903,
+              353
+            ],
+            "value": 6.65625,
+            "metrics": {
+              "abs_peak": 6.65625,
+              "z_score_max": 31.195268638378256,
+              "robust_z": 31.498857727491572,
+              "mad": 0.14261627197265625,
+              "ratio_to_p99": 12.0,
+              "sample_size": 16384,
+              "values_inspected": 884736
+            },
+            "thresholds": {
+              "z_score_max": 8.5,
+              "robust_z": 12.0,
+              "kurtosis": 60.0,
+              "ratio_to_p99": 4.0,
+              "abs_peak": 5.0
+            },
+            "triggered_rules": [
+              "classic_peak",
+              "robust_peak"
+            ]
+          },
+          "key": "b9166d467710f50c990b579b6d66b709f5beff33018b2ed4f685531a16f5da11",
+          "scope": "model",
+          "comment": "Статистическая аномалия в координатах [903, 353] присутствует в файле с SHA-256 опубликованного эталона SmolLM2. Подмена весов в конкурсной поставке по этому признаку не подтверждена."
+        },
+        {
+          "id": "MDL-BACKDOOR-NEURON",
+          "contour": "model",
+          "category": "weight_backdoor",
+          "object": "model/model.safetensors :: тензор 'model.layers.27.mlp.up_proj.weight' (нейрон/канал #903, shape=[1536, 576])",
+          "evidence": "Статический сигнал. Числовые метрики и координаты доступны в point.",
+          "severity": "high",
+          "status": "false_positive",
+          "decision": "Сверить место с оригиналом и устранить выявленный механизм.",
+          "point": {
+            "tensor": "model.layers.27.mlp.up_proj.weight",
+            "kind": "row_norm",
+            "index": 903,
+            "coordinates": [
+              903
+            ],
+            "value": 36.69386092628854,
+            "metrics": {
+              "row_norm": 36.69386092628854,
+              "median_row_norm": 5.032752764951862,
+              "ratio": 7.29101202463688
+            },
+            "thresholds": {
+              "ratio": 4.5,
+              "row_norm": 3.0
+            }
+          },
+          "key": "e3f90cbd4f7ab7178682a1e7db8be75717475b3d1b6ba3d20297a3af5361768e",
+          "scope": "model",
+          "comment": "Статистическая аномалия в координатах [903] присутствует в файле с SHA-256 опубликованного эталона SmolLM2. Подмена весов в конкурсной поставке по этому признаку не подтверждена."
+        },
+        {
+          "id": "MDL-BACKDOOR-OUTLIER",
+          "contour": "model",
+          "category": "weight_backdoor",
+          "object": "model/model.safetensors :: тензор 'model.layers.28.mlp.down_proj.weight' (elements=884736)",
+          "evidence": "Статический сигнал. Числовые метрики и координаты доступны в point.",
+          "severity": "high",
+          "status": "false_positive",
+          "decision": "Сверить место с оригиналом и устранить выявленный механизм.",
+          "point": {
+            "tensor": "model.layers.28.mlp.down_proj.weight",
+            "kind": "peak",
+            "index": 779430,
+            "coordinates": [
+              507,
+              678
+            ],
+            "value": -5.78125,
+            "metrics": {
+              "abs_peak": 5.78125,
+              "z_score_max": 28.814332640123727,
+              "robust_z": 29.027036975255186,
+              "mad": 0.1343517303466797,
+              "ratio_to_p99": 11.044776119402986,
+              "sample_size": 16384,
+              "values_inspected": 884736
+            },
+            "thresholds": {
+              "z_score_max": 8.5,
+              "robust_z": 12.0,
+              "kurtosis": 60.0,
+              "ratio_to_p99": 4.0,
+              "abs_peak": 5.0
+            },
+            "triggered_rules": [
+              "classic_peak",
+              "robust_peak"
+            ]
+          },
+          "key": "6bfff62eafd29d2a7074eede855fa998a8b6313897bf2cc1ba3272c0adaa2b51",
+          "scope": "model",
+          "comment": "Статистическая аномалия в координатах [507, 678] присутствует в файле с SHA-256 опубликованного эталона SmolLM2. Подмена весов в конкурсной поставке по этому признаку не подтверждена."
+        },
+        {
+          "id": "MDL-BACKDOOR-OUTLIER",
+          "contour": "model",
+          "category": "weight_backdoor",
+          "object": "model/model.safetensors :: тензор 'model.layers.28.mlp.gate_proj.weight' (elements=884736)",
+          "evidence": "Статический сигнал. Числовые метрики и координаты доступны в point.",
+          "severity": "high",
+          "status": "false_positive",
+          "decision": "Сверить место с оригиналом и устранить выявленный механизм.",
+          "point": {
+            "tensor": "model.layers.28.mlp.gate_proj.weight",
+            "kind": "peak",
+            "index": 390771,
+            "coordinates": [
+              678,
+              243
+            ],
+            "value": 5.34375,
+            "metrics": {
+              "abs_peak": 5.34375,
+              "z_score_max": 29.940488460131096,
+              "robust_z": 30.779768353109922,
+              "mad": 0.1170196533203125,
+              "ratio_to_p99": 11.447698744769875,
+              "sample_size": 16384,
+              "values_inspected": 884736
+            },
+            "thresholds": {
+              "z_score_max": 8.5,
+              "robust_z": 12.0,
+              "kurtosis": 60.0,
+              "ratio_to_p99": 4.0,
+              "abs_peak": 5.0
+            },
+            "triggered_rules": [
+              "classic_peak",
+              "robust_peak"
+            ]
+          },
+          "key": "3fed7d70af00ddb0494fb562f90ef9daaee0a6dbd793966fc02419e66710457e",
+          "scope": "model",
+          "comment": "Статистическая аномалия в координатах [678, 243] присутствует в файле с SHA-256 опубликованного эталона SmolLM2. Подмена весов в конкурсной поставке по этому признаку не подтверждена."
+        },
+        {
+          "id": "MDL-BACKDOOR-NEURON",
+          "contour": "model",
+          "category": "weight_backdoor",
+          "object": "model/model.safetensors :: тензор 'model.layers.28.mlp.gate_proj.weight' (нейрон/канал #678, shape=[1536, 576])",
+          "evidence": "Статический сигнал. Числовые метрики и координаты доступны в point.",
+          "severity": "high",
+          "status": "false_positive",
+          "decision": "Сверить место с оригиналом и устранить выявленный механизм.",
+          "point": {
+            "tensor": "model.layers.28.mlp.gate_proj.weight",
+            "kind": "row_norm",
+            "index": 678,
+            "coordinates": [
+              678
+            ],
+            "value": 23.683128316575797,
+            "metrics": {
+              "row_norm": 23.683128316575797,
+              "median_row_norm": 4.0273236695634695,
+              "ratio": 5.880612103656139
+            },
+            "thresholds": {
+              "ratio": 4.5,
+              "row_norm": 3.0
+            }
+          },
+          "key": "c4e33b3f0aa76d15555b89a316fcb9196473e1ae060531ec5912f4238ff4ac82",
+          "scope": "model",
+          "comment": "Статистическая аномалия в координатах [678] присутствует в файле с SHA-256 опубликованного эталона SmolLM2. Подмена весов в конкурсной поставке по этому признаку не подтверждена."
+        },
+        {
+          "id": "MDL-BACKDOOR-OUTLIER",
+          "contour": "model",
+          "category": "weight_backdoor",
+          "object": "model/model.safetensors :: тензор 'model.layers.28.mlp.up_proj.weight' (elements=884736)",
+          "evidence": "Статический сигнал. Числовые метрики и координаты доступны в point.",
+          "severity": "high",
+          "status": "false_positive",
+          "decision": "Сверить место с оригиналом и устранить выявленный механизм.",
+          "point": {
+            "tensor": "model.layers.28.mlp.up_proj.weight",
+            "kind": "peak",
+            "index": 391092,
+            "coordinates": [
+              678,
+              564
+            ],
+            "value": -6.1875,
+            "metrics": {
+              "abs_peak": 6.1875,
+              "z_score_max": 28.392630925829742,
+              "robust_z": 29.419107240841356,
+              "mad": 0.14182281494140625,
+              "ratio_to_p99": 11.0,
+              "sample_size": 16384,
+              "values_inspected": 884736
+            },
+            "thresholds": {
+              "z_score_max": 8.5,
+              "robust_z": 12.0,
+              "kurtosis": 60.0,
+              "ratio_to_p99": 4.0,
+              "abs_peak": 5.0
+            },
+            "triggered_rules": [
+              "classic_peak",
+              "robust_peak"
+            ]
+          },
+          "key": "ba24bad541228046f7e66ddf124161557353b5264360ef6b7091db0529703bdf",
+          "scope": "model",
+          "comment": "Статистическая аномалия в координатах [678, 564] присутствует в файле с SHA-256 опубликованного эталона SmolLM2. Подмена весов в конкурсной поставке по этому признаку не подтверждена."
+        },
+        {
+          "id": "MDL-BACKDOOR-NEURON",
+          "contour": "model",
+          "category": "weight_backdoor",
+          "object": "model/model.safetensors :: тензор 'model.layers.28.mlp.up_proj.weight' (нейрон/канал #678, shape=[1536, 576])",
+          "evidence": "Статический сигнал. Числовые метрики и координаты доступны в point.",
+          "severity": "high",
+          "status": "false_positive",
+          "decision": "Сверить место с оригиналом и устранить выявленный механизм.",
+          "point": {
+            "tensor": "model.layers.28.mlp.up_proj.weight",
+            "kind": "row_norm",
+            "index": 678,
+            "coordinates": [
+              678
+            ],
+            "value": 49.47689488706038,
+            "metrics": {
+              "row_norm": 49.47689488706038,
+              "median_row_norm": 5.125686131219727,
+              "ratio": 9.652735969474332
+            },
+            "thresholds": {
+              "ratio": 4.5,
+              "row_norm": 3.0
+            }
+          },
+          "key": "293ac96fa077913613703dafed17c37d7d7055811e8f14740603e040bead801d",
+          "scope": "model",
+          "comment": "Статистическая аномалия в координатах [678] присутствует в файле с SHA-256 опубликованного эталона SmolLM2. Подмена весов в конкурсной поставке по этому признаку не подтверждена."
+        },
+        {
           "id": "MDL-PROMPT-MARKER",
           "contour": "model",
           "category": "prompt_indicator",
@@ -464,6 +989,34 @@
           "comment": "Подтверждён уязвимый pin в requirements.txt. Для эксплуатации нужен Session с первым вызовом verify=False. Обновить разрешённый диапазон."
         }
       ],
+      "weight_coverage": {
+        "values_total": 134515008,
+        "values_inspected": 134515008,
+        "tensors_total": 272,
+        "tensors_inspected": 272
+      },
+      "dependencies": [
+        {
+          "file": "requirements.txt",
+          "name": "transformers",
+          "version": "4.44.0"
+        },
+        {
+          "file": "requirements.txt",
+          "name": "torch",
+          "version": "2.4.0"
+        },
+        {
+          "file": "requirements.txt",
+          "name": "requests",
+          "version": "2.19.1"
+        },
+        {
+          "file": "docker-constraints.txt",
+          "name": "urllib3",
+          "version": "1.26.9"
+        }
+      ],
       "scanned_files": [
         "model/_fixtures/legacy_weights.py",
         "model/config.json",
@@ -488,9 +1041,9 @@
       },
       "execution": {
         "cache": "miss",
-        "fingerprint": "45d1f6e75871dc6606bc3ed67dc9615ecb84263ccb532d08cb98d07b4b26b83f"
+        "fingerprint": "bc2e5f36e5e6029f616282af860de258d2aace7453805a2b3d0c655133d9c7b0"
       },
-      "findings_count": 30,
+      "findings_count": 44,
       "active_findings_count": 0
     },
     {
@@ -602,7 +1155,7 @@
       ],
       "execution": {
         "cache": "miss",
-        "fingerprint": "8d996a9566ab2e9ab2760896fc99a44b3794279532a515d1de98733a2304a4c9"
+        "fingerprint": "4ae8b24a682d19660b4ec0ff574f1ef3b780afa65975e0382950aa36fefa77e3"
       },
       "findings_count": 7,
       "active_findings_count": 0
@@ -704,7 +1257,7 @@
       ],
       "execution": {
         "cache": "miss",
-        "fingerprint": "181feadba5c9afdbf236a10e62f1d0bec50f29a0b05c80645318b19691df6d0a"
+        "fingerprint": "e1613b6f01cf853002c32b2014b5c2d9aded36df5c6d33f6329782b6bce62cf4"
       },
       "findings_count": 6,
       "active_findings_count": 0
@@ -804,7 +1357,7 @@
       ],
       "execution": {
         "cache": "miss",
-        "fingerprint": "273000cb057eaa68ca847f7bb91537b32fab0296d62053fc60eb8053d1ef2a1d"
+        "fingerprint": "91d3a1d380a9e224ebccc58469703d4fdb0f10f426b23e5095981029bd7292a5"
       },
       "findings_count": 6,
       "active_findings_count": 0
@@ -838,21 +1391,13 @@
       ],
       "execution": {
         "cache": "miss",
-        "fingerprint": "b9f7d023d7f6a41626c160c91d82fd84ea0dc3732a0112925ee539795d9dce32"
+        "fingerprint": "c3fc0c375dfbec85b96a67e14c0cd1ec5f0a16ff189543091b649572b6209bca"
       },
       "findings_count": 1,
       "active_findings_count": 0
     }
   ],
-  "warnings": [
-    {
-      "code": "SAMPLED_WEIGHTS",
-      "contour": "model",
-      "message": "Статистика по 211 тензорам ограничена префиксом или численным диапазоном.",
-      "blocking": false,
-      "finding_key": null
-    }
-  ],
+  "warnings": [],
   "attack_paths": [
     {
       "title": "Доступ к документам",
@@ -1085,6 +1630,551 @@
       {
         "id": "finding-18",
         "type": "finding",
+        "key": "f36405a7e35ca953f0fa17f61c475bbf53e01fb161cd1bb90c93dcd91ca75300",
+        "rule": "MDL-BACKDOOR-NEURON",
+        "object": "model/model.safetensors :: тензор 'model.layers.0.self_attn.o_proj.weight' (нейрон/канал #260, shape=[576, 576])",
+        "severity": "high",
+        "status": "false_positive",
+        "blocking": false
+      },
+      {
+        "id": "point-18",
+        "type": "point",
+        "data": {
+          "tensor": "model.layers.0.self_attn.o_proj.weight",
+          "kind": "row_norm",
+          "index": 260,
+          "coordinates": [
+            260
+          ],
+          "value": 6.641622818919843,
+          "metrics": {
+            "row_norm": 6.641622818919843,
+            "median_row_norm": 1.456042418056046,
+            "ratio": 4.5614212447100515
+          },
+          "thresholds": {
+            "ratio": 4.5,
+            "row_norm": 3.0
+          }
+        }
+      },
+      {
+        "id": "finding-19",
+        "type": "finding",
+        "key": "9a19c8c9cadd1da55b52c6ef0f19d5772af32c301ae7d33774c6ef2d8b27b412",
+        "rule": "MDL-BACKDOOR-OUTLIER",
+        "object": "model/model.safetensors :: тензор 'model.layers.0.self_attn.q_proj.weight' (elements=331776)",
+        "severity": "high",
+        "status": "false_positive",
+        "blocking": false
+      },
+      {
+        "id": "point-19",
+        "type": "point",
+        "data": {
+          "tensor": "model.layers.0.self_attn.q_proj.weight",
+          "kind": "peak",
+          "index": 124100,
+          "coordinates": [
+            215,
+            260
+          ],
+          "value": 5.25,
+          "metrics": {
+            "abs_peak": 5.25,
+            "z_score_max": 18.56771677643209,
+            "robust_z": 28.02135762589059,
+            "mad": 0.1263580322265625,
+            "ratio_to_p99": 5.463414634146342,
+            "sample_size": 15799,
+            "values_inspected": 331776
+          },
+          "thresholds": {
+            "z_score_max": 8.5,
+            "robust_z": 12.0,
+            "kurtosis": 60.0,
+            "ratio_to_p99": 4.0,
+            "abs_peak": 5.0
+          },
+          "triggered_rules": [
+            "classic_peak",
+            "robust_peak"
+          ]
+        }
+      },
+      {
+        "id": "finding-20",
+        "type": "finding",
+        "key": "ec0dfad1c1f936d853539953c804be25f170b5ce4e73fea253172169b2986631",
+        "rule": "MDL-BACKDOOR-OUTLIER",
+        "object": "model/model.safetensors :: тензор 'model.layers.11.mlp.down_proj.weight' (elements=884736)",
+        "severity": "high",
+        "status": "false_positive",
+        "blocking": false
+      },
+      {
+        "id": "point-20",
+        "type": "point",
+        "data": {
+          "tensor": "model.layers.11.mlp.down_proj.weight",
+          "kind": "peak",
+          "index": 780239,
+          "coordinates": [
+            507,
+            1487
+          ],
+          "value": 6.0625,
+          "metrics": {
+            "abs_peak": 6.0625,
+            "z_score_max": 30.53476371848199,
+            "robust_z": 31.912743553914908,
+            "mad": 0.12813997268676758,
+            "ratio_to_p99": 11.00709219858156,
+            "sample_size": 16384,
+            "values_inspected": 884736
+          },
+          "thresholds": {
+            "z_score_max": 8.5,
+            "robust_z": 12.0,
+            "kurtosis": 60.0,
+            "ratio_to_p99": 4.0,
+            "abs_peak": 5.0
+          },
+          "triggered_rules": [
+            "classic_peak",
+            "robust_peak"
+          ]
+        }
+      },
+      {
+        "id": "finding-21",
+        "type": "finding",
+        "key": "f636e6ec78cdb9970f89d8ee8e7f6d47c9a552dbc20fe439b8c1066f2d113d78",
+        "rule": "MDL-BACKDOOR-OUTLIER",
+        "object": "model/model.safetensors :: тензор 'model.layers.2.mlp.down_proj.weight' (elements=884736)",
+        "severity": "high",
+        "status": "false_positive",
+        "blocking": false
+      },
+      {
+        "id": "point-21",
+        "type": "point",
+        "data": {
+          "tensor": "model.layers.2.mlp.down_proj.weight",
+          "kind": "peak",
+          "index": 779182,
+          "coordinates": [
+            507,
+            430
+          ],
+          "value": -5.3125,
+          "metrics": {
+            "abs_peak": 5.3125,
+            "z_score_max": 29.190105621248698,
+            "robust_z": 30.022376442568973,
+            "mad": 0.11932754516601562,
+            "ratio_to_p99": 11.10204081632653,
+            "sample_size": 16384,
+            "values_inspected": 884736
+          },
+          "thresholds": {
+            "z_score_max": 8.5,
+            "robust_z": 12.0,
+            "kurtosis": 60.0,
+            "ratio_to_p99": 4.0,
+            "abs_peak": 5.0
+          },
+          "triggered_rules": [
+            "classic_peak",
+            "robust_peak"
+          ]
+        }
+      },
+      {
+        "id": "finding-22",
+        "type": "finding",
+        "key": "91902f5f5b45fc86cb9c1db7032aa38234b88fec87183d7a5e31cbbae50983c7",
+        "rule": "MDL-BACKDOOR-NEURON",
+        "object": "model/model.safetensors :: тензор 'model.layers.24.self_attn.o_proj.weight' (нейрон/канал #17, shape=[576, 576])",
+        "severity": "high",
+        "status": "false_positive",
+        "blocking": false
+      },
+      {
+        "id": "point-22",
+        "type": "point",
+        "data": {
+          "tensor": "model.layers.24.self_attn.o_proj.weight",
+          "kind": "row_norm",
+          "index": 17,
+          "coordinates": [
+            17
+          ],
+          "value": 26.13051360305526,
+          "metrics": {
+            "row_norm": 26.13051360305526,
+            "median_row_norm": 4.972010188375131,
+            "ratio": 5.255522940027361
+          },
+          "thresholds": {
+            "ratio": 4.5,
+            "row_norm": 3.0
+          }
+        }
+      },
+      {
+        "id": "finding-23",
+        "type": "finding",
+        "key": "e06cbbb4d948296f2578c9254d8f57226d8f43db76aeda1aae22e879b5781cc1",
+        "rule": "MDL-BACKDOOR-OUTLIER",
+        "object": "model/model.safetensors :: тензор 'model.layers.27.mlp.gate_proj.weight' (elements=884736)",
+        "severity": "high",
+        "status": "false_positive",
+        "blocking": false
+      },
+      {
+        "id": "point-23",
+        "type": "point",
+        "data": {
+          "tensor": "model.layers.27.mlp.gate_proj.weight",
+          "kind": "peak",
+          "index": 520388,
+          "coordinates": [
+            903,
+            260
+          ],
+          "value": -9.25,
+          "metrics": {
+            "abs_peak": 9.25,
+            "z_score_max": 51.49840649130017,
+            "robust_z": 52.804420392549304,
+            "mad": 0.11816787719726562,
+            "ratio_to_p99": 19.17408906882591,
+            "sample_size": 16384,
+            "values_inspected": 884736,
+            "kurtosis": 23.180992608354355
+          },
+          "thresholds": {
+            "z_score_max": 8.5,
+            "robust_z": 12.0,
+            "kurtosis": 60.0,
+            "ratio_to_p99": 4.0,
+            "abs_peak": 5.0
+          },
+          "triggered_rules": [
+            "classic_peak",
+            "robust_peak"
+          ]
+        }
+      },
+      {
+        "id": "finding-24",
+        "type": "finding",
+        "key": "ef96790153a87aef086d4d11ae8fc37a1c70ba5b2d7ae99f36ce254138dcc8c4",
+        "rule": "MDL-BACKDOOR-NEURON",
+        "object": "model/model.safetensors :: тензор 'model.layers.27.mlp.gate_proj.weight' (нейрон/канал #903, shape=[1536, 576])",
+        "severity": "high",
+        "status": "false_positive",
+        "blocking": false
+      },
+      {
+        "id": "point-24",
+        "type": "point",
+        "data": {
+          "tensor": "model.layers.27.mlp.gate_proj.weight",
+          "kind": "row_norm",
+          "index": 903,
+          "coordinates": [
+            903
+          ],
+          "value": 23.546645531640195,
+          "metrics": {
+            "row_norm": 23.546645531640195,
+            "median_row_norm": 4.042673012734842,
+            "ratio": 5.824523887404646
+          },
+          "thresholds": {
+            "ratio": 4.5,
+            "row_norm": 3.0
+          }
+        }
+      },
+      {
+        "id": "finding-25",
+        "type": "finding",
+        "key": "b9166d467710f50c990b579b6d66b709f5beff33018b2ed4f685531a16f5da11",
+        "rule": "MDL-BACKDOOR-OUTLIER",
+        "object": "model/model.safetensors :: тензор 'model.layers.27.mlp.up_proj.weight' (elements=884736)",
+        "severity": "high",
+        "status": "false_positive",
+        "blocking": false
+      },
+      {
+        "id": "point-25",
+        "type": "point",
+        "data": {
+          "tensor": "model.layers.27.mlp.up_proj.weight",
+          "kind": "peak",
+          "index": 520481,
+          "coordinates": [
+            903,
+            353
+          ],
+          "value": 6.65625,
+          "metrics": {
+            "abs_peak": 6.65625,
+            "z_score_max": 31.195268638378256,
+            "robust_z": 31.498857727491572,
+            "mad": 0.14261627197265625,
+            "ratio_to_p99": 12.0,
+            "sample_size": 16384,
+            "values_inspected": 884736
+          },
+          "thresholds": {
+            "z_score_max": 8.5,
+            "robust_z": 12.0,
+            "kurtosis": 60.0,
+            "ratio_to_p99": 4.0,
+            "abs_peak": 5.0
+          },
+          "triggered_rules": [
+            "classic_peak",
+            "robust_peak"
+          ]
+        }
+      },
+      {
+        "id": "finding-26",
+        "type": "finding",
+        "key": "e3f90cbd4f7ab7178682a1e7db8be75717475b3d1b6ba3d20297a3af5361768e",
+        "rule": "MDL-BACKDOOR-NEURON",
+        "object": "model/model.safetensors :: тензор 'model.layers.27.mlp.up_proj.weight' (нейрон/канал #903, shape=[1536, 576])",
+        "severity": "high",
+        "status": "false_positive",
+        "blocking": false
+      },
+      {
+        "id": "point-26",
+        "type": "point",
+        "data": {
+          "tensor": "model.layers.27.mlp.up_proj.weight",
+          "kind": "row_norm",
+          "index": 903,
+          "coordinates": [
+            903
+          ],
+          "value": 36.69386092628854,
+          "metrics": {
+            "row_norm": 36.69386092628854,
+            "median_row_norm": 5.032752764951862,
+            "ratio": 7.29101202463688
+          },
+          "thresholds": {
+            "ratio": 4.5,
+            "row_norm": 3.0
+          }
+        }
+      },
+      {
+        "id": "finding-27",
+        "type": "finding",
+        "key": "6bfff62eafd29d2a7074eede855fa998a8b6313897bf2cc1ba3272c0adaa2b51",
+        "rule": "MDL-BACKDOOR-OUTLIER",
+        "object": "model/model.safetensors :: тензор 'model.layers.28.mlp.down_proj.weight' (elements=884736)",
+        "severity": "high",
+        "status": "false_positive",
+        "blocking": false
+      },
+      {
+        "id": "point-27",
+        "type": "point",
+        "data": {
+          "tensor": "model.layers.28.mlp.down_proj.weight",
+          "kind": "peak",
+          "index": 779430,
+          "coordinates": [
+            507,
+            678
+          ],
+          "value": -5.78125,
+          "metrics": {
+            "abs_peak": 5.78125,
+            "z_score_max": 28.814332640123727,
+            "robust_z": 29.027036975255186,
+            "mad": 0.1343517303466797,
+            "ratio_to_p99": 11.044776119402986,
+            "sample_size": 16384,
+            "values_inspected": 884736
+          },
+          "thresholds": {
+            "z_score_max": 8.5,
+            "robust_z": 12.0,
+            "kurtosis": 60.0,
+            "ratio_to_p99": 4.0,
+            "abs_peak": 5.0
+          },
+          "triggered_rules": [
+            "classic_peak",
+            "robust_peak"
+          ]
+        }
+      },
+      {
+        "id": "finding-28",
+        "type": "finding",
+        "key": "3fed7d70af00ddb0494fb562f90ef9daaee0a6dbd793966fc02419e66710457e",
+        "rule": "MDL-BACKDOOR-OUTLIER",
+        "object": "model/model.safetensors :: тензор 'model.layers.28.mlp.gate_proj.weight' (elements=884736)",
+        "severity": "high",
+        "status": "false_positive",
+        "blocking": false
+      },
+      {
+        "id": "point-28",
+        "type": "point",
+        "data": {
+          "tensor": "model.layers.28.mlp.gate_proj.weight",
+          "kind": "peak",
+          "index": 390771,
+          "coordinates": [
+            678,
+            243
+          ],
+          "value": 5.34375,
+          "metrics": {
+            "abs_peak": 5.34375,
+            "z_score_max": 29.940488460131096,
+            "robust_z": 30.779768353109922,
+            "mad": 0.1170196533203125,
+            "ratio_to_p99": 11.447698744769875,
+            "sample_size": 16384,
+            "values_inspected": 884736
+          },
+          "thresholds": {
+            "z_score_max": 8.5,
+            "robust_z": 12.0,
+            "kurtosis": 60.0,
+            "ratio_to_p99": 4.0,
+            "abs_peak": 5.0
+          },
+          "triggered_rules": [
+            "classic_peak",
+            "robust_peak"
+          ]
+        }
+      },
+      {
+        "id": "finding-29",
+        "type": "finding",
+        "key": "c4e33b3f0aa76d15555b89a316fcb9196473e1ae060531ec5912f4238ff4ac82",
+        "rule": "MDL-BACKDOOR-NEURON",
+        "object": "model/model.safetensors :: тензор 'model.layers.28.mlp.gate_proj.weight' (нейрон/канал #678, shape=[1536, 576])",
+        "severity": "high",
+        "status": "false_positive",
+        "blocking": false
+      },
+      {
+        "id": "point-29",
+        "type": "point",
+        "data": {
+          "tensor": "model.layers.28.mlp.gate_proj.weight",
+          "kind": "row_norm",
+          "index": 678,
+          "coordinates": [
+            678
+          ],
+          "value": 23.683128316575797,
+          "metrics": {
+            "row_norm": 23.683128316575797,
+            "median_row_norm": 4.0273236695634695,
+            "ratio": 5.880612103656139
+          },
+          "thresholds": {
+            "ratio": 4.5,
+            "row_norm": 3.0
+          }
+        }
+      },
+      {
+        "id": "finding-30",
+        "type": "finding",
+        "key": "ba24bad541228046f7e66ddf124161557353b5264360ef6b7091db0529703bdf",
+        "rule": "MDL-BACKDOOR-OUTLIER",
+        "object": "model/model.safetensors :: тензор 'model.layers.28.mlp.up_proj.weight' (elements=884736)",
+        "severity": "high",
+        "status": "false_positive",
+        "blocking": false
+      },
+      {
+        "id": "point-30",
+        "type": "point",
+        "data": {
+          "tensor": "model.layers.28.mlp.up_proj.weight",
+          "kind": "peak",
+          "index": 391092,
+          "coordinates": [
+            678,
+            564
+          ],
+          "value": -6.1875,
+          "metrics": {
+            "abs_peak": 6.1875,
+            "z_score_max": 28.392630925829742,
+            "robust_z": 29.419107240841356,
+            "mad": 0.14182281494140625,
+            "ratio_to_p99": 11.0,
+            "sample_size": 16384,
+            "values_inspected": 884736
+          },
+          "thresholds": {
+            "z_score_max": 8.5,
+            "robust_z": 12.0,
+            "kurtosis": 60.0,
+            "ratio_to_p99": 4.0,
+            "abs_peak": 5.0
+          },
+          "triggered_rules": [
+            "classic_peak",
+            "robust_peak"
+          ]
+        }
+      },
+      {
+        "id": "finding-31",
+        "type": "finding",
+        "key": "293ac96fa077913613703dafed17c37d7d7055811e8f14740603e040bead801d",
+        "rule": "MDL-BACKDOOR-NEURON",
+        "object": "model/model.safetensors :: тензор 'model.layers.28.mlp.up_proj.weight' (нейрон/канал #678, shape=[1536, 576])",
+        "severity": "high",
+        "status": "false_positive",
+        "blocking": false
+      },
+      {
+        "id": "point-31",
+        "type": "point",
+        "data": {
+          "tensor": "model.layers.28.mlp.up_proj.weight",
+          "kind": "row_norm",
+          "index": 678,
+          "coordinates": [
+            678
+          ],
+          "value": 49.47689488706038,
+          "metrics": {
+            "row_norm": 49.47689488706038,
+            "median_row_norm": 5.125686131219727,
+            "ratio": 9.652735969474332
+          },
+          "thresholds": {
+            "ratio": 4.5,
+            "row_norm": 3.0
+          }
+        }
+      },
+      {
+        "id": "finding-32",
+        "type": "finding",
         "key": "4b9a8d5e97576c8a4def6cee34ae53e203ca09772180285686b60282ce85fe07",
         "rule": "MDL-PROMPT-MARKER",
         "object": "model/tokenizer_config.json :: chat_template (instruction_override, byte 177)",
@@ -1093,7 +2183,7 @@
         "blocking": false
       },
       {
-        "id": "point-18",
+        "id": "point-32",
         "type": "point",
         "data": {
           "tensor": "chat_template",
@@ -1107,7 +2197,7 @@
         }
       },
       {
-        "id": "finding-19",
+        "id": "finding-33",
         "type": "finding",
         "key": "0486f415877d496d08ce56242676f59c752bd97df2dd1047c51822608d7de5cf",
         "rule": "SFS-SYSTEM-PROMPT-INJECTION",
@@ -1117,7 +2207,7 @@
         "blocking": false
       },
       {
-        "id": "finding-20",
+        "id": "finding-34",
         "type": "finding",
         "key": "2cca14ad033e5e4449dd9015dc91afd3b7a4048c0b00443d0dd5ba352cadb5df",
         "rule": "SFS-DEP-CVE-2024-11393",
@@ -1127,7 +2217,7 @@
         "blocking": false
       },
       {
-        "id": "finding-21",
+        "id": "finding-35",
         "type": "finding",
         "key": "837faf04cb6ac25ba764e6937f00fd694680ea3de802c8f8d91d62dc48e3b0e2",
         "rule": "SFS-DEP-CVE-2024-11394",
@@ -1137,7 +2227,7 @@
         "blocking": false
       },
       {
-        "id": "finding-22",
+        "id": "finding-36",
         "type": "finding",
         "key": "2f39c50f6ce589b22244077bdb75cb2295202421d3bad124e1342a50cb137388",
         "rule": "MDL-DEP-CVE-2024-11392",
@@ -1147,7 +2237,7 @@
         "blocking": false
       },
       {
-        "id": "finding-23",
+        "id": "finding-37",
         "type": "finding",
         "key": "1f6f7c067e064029058610f5346e366206bdaa6dea59b30551aed9cffd4d2de3",
         "rule": "SFS-DEP-CVE-2026-24747",
@@ -1157,7 +2247,7 @@
         "blocking": false
       },
       {
-        "id": "finding-24",
+        "id": "finding-38",
         "type": "finding",
         "key": "97076a2c5a602524eeaa23c5418ff9bb27d2795232b02be229517830e573a843",
         "rule": "MDL-DEP-CVE-2025-32434",
@@ -1167,7 +2257,7 @@
         "blocking": false
       },
       {
-        "id": "finding-25",
+        "id": "finding-39",
         "type": "finding",
         "key": "b4502baef8cc901d140cbab61a9458c840955dd69d352c112eb7839ba7552e98",
         "rule": "SFS-DEP-CVE-2018-18074",
@@ -1177,7 +2267,7 @@
         "blocking": false
       },
       {
-        "id": "finding-26",
+        "id": "finding-40",
         "type": "finding",
         "key": "c52b80bed8a8f8ba3b48eb2c22b22457d965d3e3faa4d4f6aa3086a6c9394186",
         "rule": "SFS-DEP-CVE-2023-32681",
@@ -1187,7 +2277,7 @@
         "blocking": false
       },
       {
-        "id": "finding-27",
+        "id": "finding-41",
         "type": "finding",
         "key": "4761525415c4dc691cfcebbf174511bb7e569bd088fbc96dccbd183b0bdcd21d",
         "rule": "SFS-DEP-CVE-2024-47081",
@@ -1197,7 +2287,7 @@
         "blocking": false
       },
       {
-        "id": "finding-28",
+        "id": "finding-42",
         "type": "finding",
         "key": "6433e7b043c55e6399910138cbc5e6779d4e6bf50e00c5ccf20a8c7867e1da74",
         "rule": "SFS-DEP-CVE-2026-25645",
@@ -1207,7 +2297,7 @@
         "blocking": false
       },
       {
-        "id": "finding-29",
+        "id": "finding-43",
         "type": "finding",
         "key": "2ec0d6196971d04fa50c3797db9e44a2816f7977064908e556183ec9ed031377",
         "rule": "MDL-DEP-CVE-2024-35195",
@@ -1217,7 +2307,7 @@
         "blocking": false
       },
       {
-        "id": "finding-30",
+        "id": "finding-44",
         "type": "finding",
         "key": "da4d2068a642ea151297039e4be6b5407952d5fa587cc5663fd60ef2adb94316",
         "rule": "SFS-DOC-CREDENTIAL-EXPOSURE",
@@ -1227,7 +2317,7 @@
         "blocking": false
       },
       {
-        "id": "finding-31",
+        "id": "finding-45",
         "type": "finding",
         "key": "e08bec0239f1704c6d1995c48592fa3a9fc84723e14274772ed72e6f489ea2e2",
         "rule": "SFS-WILDCARD-BIND",
@@ -1237,7 +2327,7 @@
         "blocking": false
       },
       {
-        "id": "finding-32",
+        "id": "finding-46",
         "type": "finding",
         "key": "f8f9abc740a3b1d535fdb0fb12b0eb1553f56cc0c8ac891de68a25f34fef4db3",
         "rule": "SFS-HARDCODED-CREDENTIAL",
@@ -1247,7 +2337,7 @@
         "blocking": false
       },
       {
-        "id": "finding-33",
+        "id": "finding-47",
         "type": "finding",
         "key": "83714d87a690f31d0d6ac61f6095aa8e601d7820ccec18c64f96700db8f33579",
         "rule": "SFS-AUTH-BYPASS",
@@ -1257,7 +2347,7 @@
         "blocking": false
       },
       {
-        "id": "finding-34",
+        "id": "finding-48",
         "type": "finding",
         "key": "4378ae12d48ae4ec49a8c68c5c369a0d0c5ea3d48717bda3773415db6d0600ab",
         "rule": "SFS-HTTP-BODY-UNBOUNDED",
@@ -1267,7 +2357,7 @@
         "blocking": false
       },
       {
-        "id": "finding-35",
+        "id": "finding-49",
         "type": "finding",
         "key": "999933a5aa99d9b13500579dc65001e552efef3fc32ad0ef740f9a0df2ed8614",
         "rule": "SFS-DOC-PATH-TRAVERSAL",
@@ -1277,7 +2367,7 @@
         "blocking": false
       },
       {
-        "id": "finding-36",
+        "id": "finding-50",
         "type": "finding",
         "key": "3f332d71a6ef192f624b8c68dd9cf9b34cda51a7c99e6ff9fe285a7db988125e",
         "rule": "SFS-WEB-FALLBACK-TOKEN",
@@ -1287,7 +2377,7 @@
         "blocking": false
       },
       {
-        "id": "finding-37",
+        "id": "finding-51",
         "type": "finding",
         "key": "a25f24e5ba60b6b14b476d0ec1303bf336ac42d8f956e35ae351461422dc1755",
         "rule": "SFS-CACHE-TRIGGER-SEED",
@@ -1297,7 +2387,7 @@
         "blocking": false
       },
       {
-        "id": "finding-38",
+        "id": "finding-52",
         "type": "finding",
         "key": "e1cea26dea188ad66ee7eebc949c2dd58911e3ac9764ca422a7236151814aff2",
         "rule": "SFS-HARDCODED-CREDENTIAL",
@@ -1307,7 +2397,7 @@
         "blocking": false
       },
       {
-        "id": "finding-39",
+        "id": "finding-53",
         "type": "finding",
         "key": "ede95d8f8279ac9fe80629ac2b011be0a499e89f0cafea1451efe2d843dafeac",
         "rule": "WRP-CRYPTO-WEAK-HASH",
@@ -1317,7 +2407,7 @@
         "blocking": false
       },
       {
-        "id": "finding-40",
+        "id": "finding-54",
         "type": "finding",
         "key": "f30db5ca64fd3877971018b8c8face8b54abe0092bfe9d09ce33bbf605a0d55a",
         "rule": "SFS-SQLITE-SHARED-TEMP",
@@ -1327,7 +2417,7 @@
         "blocking": false
       },
       {
-        "id": "finding-41",
+        "id": "finding-55",
         "type": "finding",
         "key": "087d5ad463e55612e6df4236b9dc51bf136461f25683616bf9047a14a5e9e610",
         "rule": "WRP-SQLI-DYNAMIC",
@@ -1337,7 +2427,7 @@
         "blocking": false
       },
       {
-        "id": "finding-42",
+        "id": "finding-56",
         "type": "finding",
         "key": "6a030cbcd1f1d988518b5a8cfc2691a0076ba37829cdc67ddaed5cd68052efc2",
         "rule": "SFS-HARDCODED-CREDENTIAL",
@@ -1347,7 +2437,7 @@
         "blocking": false
       },
       {
-        "id": "finding-43",
+        "id": "finding-57",
         "type": "finding",
         "key": "9dd9ccee8b978a199e67983ff87a45aa8c6259b1fd6942e3cb83fc8038e44552",
         "rule": "SFS-SUBSTRING-ALLOWLIST",
@@ -1357,7 +2447,7 @@
         "blocking": false
       },
       {
-        "id": "finding-44",
+        "id": "finding-58",
         "type": "finding",
         "key": "37e7d33979004a2907418baec2cc166ceb1522a754873febfb3356210b43ea71",
         "rule": "WRP-CMD-SUBPROCESS-SHELL",
@@ -1367,7 +2457,7 @@
         "blocking": false
       },
       {
-        "id": "finding-45",
+        "id": "finding-59",
         "type": "finding",
         "key": "654209f41588c8cbaac6b1a0320efcc50d57d92ce7d3cb28fc3397ac8b476166",
         "rule": "SFS-HIDDEN-COMMAND",
@@ -1377,7 +2467,7 @@
         "blocking": false
       },
       {
-        "id": "finding-46",
+        "id": "finding-60",
         "type": "finding",
         "key": "7c7543b0450c560df8afa2113ab3f4c858d0125b7d23eea7bc19759b4a66c904",
         "rule": "SFS-SUBPROCESS-PATH-SEARCH",
@@ -1387,7 +2477,7 @@
         "blocking": false
       },
       {
-        "id": "finding-47",
+        "id": "finding-61",
         "type": "finding",
         "key": "fd4d5e334f1515242fc4f17cd2170f524bc374c4dd9b50a55e7855387ac6f0e6",
         "rule": "SFS-SUBSTRING-ALLOWLIST",
@@ -1397,7 +2487,7 @@
         "blocking": false
       },
       {
-        "id": "finding-48",
+        "id": "finding-62",
         "type": "finding",
         "key": "568f95b95b3b8034e5b157b15cdd3aca110ec41ff2f1aba1fff3147cd47fa6ad",
         "rule": "SFS-SUBSTRING-ALLOWLIST",
@@ -1407,7 +2497,7 @@
         "blocking": false
       },
       {
-        "id": "finding-49",
+        "id": "finding-63",
         "type": "finding",
         "key": "f13407d99f60e99e1db6108d8ef5623565dc4a44a65a75dcd7d97f9b00a9a924",
         "rule": "SFS-OUTPUT-TRIGGERS-EGRESS",
@@ -1415,21 +2505,82 @@
         "severity": "medium",
         "status": "true_positive",
         "blocking": false
-      },
-      {
-        "id": "warning-0",
-        "type": "warning",
-        "code": "SAMPLED_WEIGHTS",
-        "contour": "model",
-        "message": "Статистика по 211 тензорам ограничена префиксом или численным диапазоном.",
-        "blocking": false,
-        "finding_key": null
       }
     ],
     "edges": [
       {
         "from": "point-18",
         "to": "finding-18",
+        "type": "evidence"
+      },
+      {
+        "from": "point-19",
+        "to": "finding-19",
+        "type": "evidence"
+      },
+      {
+        "from": "point-20",
+        "to": "finding-20",
+        "type": "evidence"
+      },
+      {
+        "from": "point-21",
+        "to": "finding-21",
+        "type": "evidence"
+      },
+      {
+        "from": "point-22",
+        "to": "finding-22",
+        "type": "evidence"
+      },
+      {
+        "from": "point-23",
+        "to": "finding-23",
+        "type": "evidence"
+      },
+      {
+        "from": "point-24",
+        "to": "finding-24",
+        "type": "evidence"
+      },
+      {
+        "from": "point-25",
+        "to": "finding-25",
+        "type": "evidence"
+      },
+      {
+        "from": "point-26",
+        "to": "finding-26",
+        "type": "evidence"
+      },
+      {
+        "from": "point-27",
+        "to": "finding-27",
+        "type": "evidence"
+      },
+      {
+        "from": "point-28",
+        "to": "finding-28",
+        "type": "evidence"
+      },
+      {
+        "from": "point-29",
+        "to": "finding-29",
+        "type": "evidence"
+      },
+      {
+        "from": "point-30",
+        "to": "finding-30",
+        "type": "evidence"
+      },
+      {
+        "from": "point-31",
+        "to": "finding-31",
+        "type": "evidence"
+      },
+      {
+        "from": "point-32",
+        "to": "finding-32",
         "type": "evidence"
       }
     ]

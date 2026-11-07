@@ -76,9 +76,12 @@ triage:
       artifacts: true
   script:
     - mkdir -p ci-reports
-    - python3 -m backend.sfs_report --reports ci-reports --markdown ci-reports/triage.md > ci-reports/report.json
+    - python3 -m backend.sfs_report --reports ci-reports --markdown ci-reports/triage.md --gitlab-dir ci-reports --gitlab-source-root "$SFS_INPUT_DIR" > ci-reports/report.json
   artifacts:
     when: always
     public: false
     paths: [ci-reports/report.json, ci-reports/triage.md]
+    reports:
+      sast: ci-reports/gl-sast-report.json
+      dependency_scanning: ci-reports/gl-dependency-scanning-report.json
     expire_in: 14 days

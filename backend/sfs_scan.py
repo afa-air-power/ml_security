@@ -23,6 +23,7 @@ RULES_WITH_SANITIZED_EVIDENCE = {
     "WRP-SQLI-DYNAMIC": "Данные задачи интерполируются в SQL-строку вместо параметра запроса.",
     "WRP-CMD-SUBPROCESS-SHELL": "Динамическая команда передаётся subprocess с shell=True.",
     "MDL-KERAS-LAMBDA": "В HDF5 метаданные model_config содержат слой Keras Lambda и сериализованную функцию.",
+    "MDL-ARCHIVE-REJECTED": "Контейнер отклонён проверкой безопасности распаковки. Причина указана в предупреждениях.",
 }
 
 
@@ -62,7 +63,7 @@ def collect_inputs(scope: str, root: Path) -> dict[str, str]:
 def scan_key(scope: str, inputs: dict[str, str]) -> str:
     base = Path(__file__).resolve().parent
     files = ("sfs_scan.py", "sfs_rules.py", "scan_ci.py")
-    files += (("sfs_dependencies.py", "scanners/model.py", "weight_points.py", "modelscan_adapter.py")
+    files += (("sfs_dependencies.py", *scan_ci.MODULES["model"])
               if scope == "model" else ("scanners/wrapper.py",))
     engine = [(name, hashlib.sha256((base / name).read_bytes()).hexdigest()) for name in files]
     return hashlib.sha256(json.dumps([scope, sys.version, inputs, engine], sort_keys=True).encode()).hexdigest()
@@ -199,18 +200,26 @@ def scan_scope(scope: str, root: Path) -> dict:
     warnings = []
     if sampled:
         warnings.append({"code": "SAMPLED_WEIGHTS", "blocking": False,
-                         "message": f"Статистика по {sampled} тензорам ограничена префиксом или численным диапазоном."})
+                         "message": f"Для {sampled} тензоров сработал лимит чтения или численного диапазона."})
     for warning in raw.get("warnings", []):
         if warning.get("code") == "DEPENDENCY_VERSION_UNRESOLVED":
             location = relative_object(warning["object"], root, base)
             warnings.append({"code": warning["code"], "blocking": False,
                              "message": model.dependency_version_message(location, warning["package"])})
-    if any(warning.get("blocking") for warning in raw.get("warnings", [])):
+        elif warning.get("code") == "ARCHIVE_REJECTED":
+            warnings.append(warning)
+    if any(warning.get("blocking") and warning.get("code") != "ARCHIVE_REJECTED"
+           for warning in raw.get("warnings", [])):
         warnings.append({"code": "ANALYZER_ERROR", "blocking": True,
                          "message": "Дополнительный анализатор не завершил проверку."})
 
     return {"id": scope, "status": raw["status"], "message": f"Проверка {scope}: {raw['status']}.",
             "warnings": warnings, "findings": findings + extra,
+            **({"weight_coverage": raw["weight_coverage"]} if "weight_coverage" in raw else {}),
+            **({"dependencies": [
+                {**entry, "file": relative_object(entry["file"], root, base)}
+                for entry in raw["dependencies"]
+            ]} if "dependencies" in raw else {}),
             "scanned_files": [relative_object(path, root, base) for path in raw["scanned_files"]]}
 
 
