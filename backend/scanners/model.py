@@ -20,10 +20,12 @@ import zipfile
 from collections.abc import Iterator
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any
+from typing import Any, BinaryIO
 
 from backend.modelscan_adapter import scan_with_modelscan
-from backend.weight_points import PROMPT_FIELDS, coordinates, prompt_matches
+from backend.weight_points import (
+    FLOAT_FORMATS, PROMPT_FIELDS, FloatTensorValues, coordinates, prompt_matches, weight_statistics,
+)
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
 DEFAULT_MODEL_DIR = ROOT_DIR / "model"
@@ -629,7 +631,7 @@ def _inspect_pickle_stream(
 
 
 def _analyze_tensor_weights(
-    tensors: dict[str, tuple[list[int], list[float]]],
+    tensors: dict[str, tuple[list[int], list[float] | FloatTensorValues]],
     source_label: str,
     findings: list[dict[str, Any]],
 ) -> None:
@@ -641,26 +643,26 @@ def _analyze_tensor_weights(
       3. Троянский нейрон-триггер (одна строка матрицы весов имеет $L_2$-норму в >4.5 раза выше медианы остальных нейронов слоя).
     """
     for tensor_name, (shape, values) in tensors.items():
-        n = len(values)
-        nonfinite = [index for index, value in enumerate(values) if not math.isfinite(value)]
-        if nonfinite:
-            index = nonfinite[0]
-            kind = "NaN" if math.isnan(values[index]) else ("+Inf" if values[index] > 0 else "-Inf")
+        stats = weight_statistics(values, shape)
+        n = stats.count
+        if stats.nonfinite_count:
+            index = stats.nonfinite_index
+            kind = "NaN" if math.isnan(stats.nonfinite_value) else ("+Inf" if stats.nonfinite_value > 0 else "-Inf")
             findings.append(_make_finding(
                 rule_id="MDL-WEIGHT-NONFINITE",
                 obj=f"{source_label} :: тензор '{tensor_name}' (индекс {index})",
-                evidence=f"Найдено {len(nonfinite)} нечисловых или бесконечных значений из {n}. Первое: {kind}.",
+                evidence=f"Найдено {stats.nonfinite_count} нечисловых или бесконечных значений из {n}. Первое: {kind}.",
                 severity="high",
                 category="weight_integrity",
                 point={"tensor": tensor_name, "kind": "nonfinite", "index": index,
                        "coordinates": coordinates(shape, index), "value": kind,
-                       "metrics": {"count": len(nonfinite), "sample_size": n}},
+                       "metrics": {"count": stats.nonfinite_count, "sample_size": n}},
             ))
             continue
         if n < 3:
             continue
 
-        if max(abs(value) for value in values) > 1e150:
+        if abs(stats.peak_value) > 1e150:
             findings.append(_make_finding(
                 rule_id="MDL-WEIGHT-RANGE", obj=f"{source_label} :: {tensor_name}",
                 evidence="Амплитуда весов превышает численно устойчивый диапазон анализа.",
@@ -669,24 +671,30 @@ def _analyze_tensor_weights(
             ))
             continue
 
-        mean_val = sum(values) / n
-        variance = sum((x - mean_val) ** 2 for x in values) / n
-        std_val = math.sqrt(variance) if variance > 0 else 0.0
-
-        peak_index = max(range(n), key=lambda index: abs(values[index]))
-        abs_vals = sorted(abs(x) for x in values)
-        max_abs = abs_vals[-1]
-        median_abs = abs_vals[n // 2] if n > 0 else 0.0
-        p99_abs = abs_vals[min(n - 1, int(n * 0.99))]
+        mean_val, std_val = stats.mean, stats.std
+        peak_index = stats.peak_index
+        abs_vals = sorted(abs(x) for x in stats.sample)
+        sample_size = len(abs_vals)
+        max_abs = abs(stats.peak_value)
+        median_abs = abs_vals[sample_size // 2]
+        p99_abs = abs_vals[min(sample_size - 1, int(sample_size * 0.99))]
+        if sample_size < n:
+            findings.append(_make_finding(
+                rule_id="MDL-WEIGHT-SAMPLED", obj=f"{source_label} :: {tensor_name}",
+                evidence=(f"Проверены все {n} значений тензора: конечность, экстремумы и моменты. "
+                          "При доступной форме рассчитаны нормы всех строк. "
+                          f"Медиана, MAD и перцентили оценены по {sample_size} значениям по всему тензору; "
+                          "для медианы норм строк также используется ограниченная выборка."),
+                severity="low", category="analysis_coverage",
+                decision="Учитывать приближённую оценку квантилей при сравнении с эталоном.",
+            ))
 
         # 1. Проверка вектора смещений (bias) на перекос целевого класса
         is_bias = len(shape) == 1 and "bias" in tensor_name.lower()
         if is_bias and n >= 3 and std_val > 1e-6:
-            max_val = max(values)
-            max_idx = values.index(max_val)
-            others = [v for i, v in enumerate(values) if i != max_idx]
-            mean_others = sum(others) / len(others)
-            var_others = sum((v - mean_others) ** 2 for v in others) / len(others)
+            max_val, max_idx = stats.maximum, stats.maximum_index
+            mean_others = (stats.total - max_val) / (n - 1)
+            var_others = max(0.0, (n * stats.variance - (max_val - mean_val) * (max_val - mean_others)) / (n - 1))
             std_others = math.sqrt(var_others) if var_others > 1e-9 else 1e-4
             bias_z = (max_val - mean_others) / std_others
 
@@ -715,59 +723,45 @@ def _analyze_tensor_weights(
                 )
 
         # 2. Проверка матриц весов на троянский нейрон-триггер (аномальная L2-норма строки)
-        if (len(shape) >= 2 and all(type(size) is int and size > 0 for size in shape)
-                and shape[0] >= 4 and math.prod(shape) == n):
-            rows = shape[0]
-            cols = n // rows
-            if cols >= 4 and rows * cols == n:
-                row_norms: list[tuple[float, int]] = []
-                for r in range(rows):
-                    row_slice = values[r * cols : (r + 1) * cols]
-                    r_norm = math.sqrt(sum(v * v for v in row_slice))
-                    row_norms.append((r_norm, r))
+        if stats.row_norms:
+            sorted_norms = sorted(stats.row_norms)
+            median_norm = sorted_norms[len(sorted_norms) // 2]
+            max_norm, max_row_idx = stats.max_row_norm, stats.max_row_index
 
-                sorted_norms = sorted(norm for norm, _ in row_norms)
-                median_norm = sorted_norms[rows // 2]
-                max_norm, max_row_idx = max(row_norms, key=lambda item: item[0])
-
-                norm_ratio = max_norm / max(median_norm, 1e-6)
-                if norm_ratio > 4.5 and max_norm > 3.0:
-                    findings.append(
-                        _make_finding(
-                            rule_id="MDL-BACKDOOR-NEURON",
-                            obj=f"{source_label} :: тензор '{tensor_name}' (нейрон/канал #{max_row_idx}, shape={shape})",
-                            evidence=(
-                                f"Обнаружена аномально большая норма в строке #{max_row_idx}: L2-норма строки = {max_norm:.4f}, "
-                                f"что в {norm_ratio:.1f}x превышает медианную L2-норму слоя ({median_norm:.4f}). "
-                                "Сравните строку с эталоном и проверьте поведение на предполагаемых триггерах."
-                            ),
-                            severity="high",
-                            status="needs_review",
-                            decision=(
-                                f"Сравнить строку #{max_row_idx} слоя '{tensor_name}' с доверенными весами. "
-                                "Решение об отклонении принять после проверки происхождения и поведения."
-                            ),
-                            category="weight_backdoor",
-                            point={"tensor": tensor_name, "kind": "row_norm", "index": max_row_idx,
-                                   "coordinates": [max_row_idx], "value": max_norm,
-                                   "metrics": {"row_norm": max_norm, "median_row_norm": median_norm, "ratio": norm_ratio},
-                                   "thresholds": {"ratio": 4.5, "row_norm": 3.0}},
-                        )
+            norm_ratio = max_norm / max(median_norm, 1e-6)
+            if norm_ratio > 4.5 and max_norm > 3.0:
+                findings.append(
+                    _make_finding(
+                        rule_id="MDL-BACKDOOR-NEURON",
+                        obj=f"{source_label} :: тензор '{tensor_name}' (нейрон/канал #{max_row_idx}, shape={shape})",
+                        evidence=(
+                            f"Обнаружена аномально большая норма в строке #{max_row_idx}: L2-норма строки = {max_norm:.4f}, "
+                            f"что в {norm_ratio:.1f}x превышает медианную L2-норму слоя ({median_norm:.4f}). "
+                            "Сравните строку с эталоном и проверьте поведение на предполагаемых триггерах."
+                        ),
+                        severity="high",
+                        status="needs_review",
+                        decision=(
+                            f"Сравнить строку #{max_row_idx} слоя '{tensor_name}' с доверенными весами. "
+                            "Решение об отклонении принять после проверки происхождения и поведения."
+                        ),
+                        category="weight_backdoor",
+                        point={"tensor": tensor_name, "kind": "row_norm", "index": max_row_idx,
+                               "coordinates": [max_row_idx], "value": max_norm,
+                               "metrics": {"row_norm": max_norm, "median_row_norm": median_norm, "ratio": norm_ratio,
+                                           "rows_inspected": stats.row_count, "row_quantile_sample_size": len(sorted_norms)},
+                               "thresholds": {"ratio": 4.5, "row_norm": 3.0}},
                     )
+                )
 
         # 3. Проверка глобальных выбросов (L_inf / Z-score / эксцесс) в тензоре
         if n >= 16 and std_val > 1e-6:
-            z_max = max(abs(x - mean_val) for x in values) / std_val
-            kurtosis = (
-                sum(((x - mean_val) / std_val) ** 4 for x in values) / n - 3.0
-                if std_val > 1e-6
-                else 0.0
-            )
+            z_max, kurtosis = stats.z_max, stats.kurtosis
             ratio_to_p99 = max_abs / max(p99_abs, 1e-6)
 
-            median = statistics.median(values)
-            mad = statistics.median(abs(value - median) for value in values)
-            robust_z = 0.6745 * abs(values[peak_index] - median) / max(mad, 1e-6)
+            median = statistics.median(stats.sample)
+            mad = statistics.median(abs(value - median) for value in stats.sample)
+            robust_z = 0.6745 * abs(stats.peak_value - median) / max(mad, 1e-6)
             triggers = [
                 name for name, triggered in (
                     ("classic_peak", z_max > 8.5 and max_abs > 5.0 and ratio_to_p99 > 4.0),
@@ -792,9 +786,10 @@ def _analyze_tensor_weights(
                         ),
                         category="weight_backdoor",
                         point={"tensor": tensor_name, "kind": "peak", "index": peak_index,
-                               "coordinates": coordinates(shape, peak_index), "value": values[peak_index],
+                               "coordinates": coordinates(shape, peak_index), "value": stats.peak_value,
                                "metrics": {"abs_peak": max_abs, "z_score_max": z_max, "robust_z": robust_z, "mad": mad,
-                                           "kurtosis": kurtosis, "ratio_to_p99": ratio_to_p99, "sample_size": n},
+                                           "kurtosis": kurtosis, "ratio_to_p99": ratio_to_p99, "sample_size": n,
+                                           "quantile_sample_size": sample_size},
                                "thresholds": {"z_score_max": 8.5, "robust_z": 12.0, "kurtosis": 60.0,
                                               "ratio_to_p99": 4.0, "abs_peak": 8.0 if triggers == ["heavy_tail"] else 5.0},
                                "triggered_rules": triggers},
@@ -851,16 +846,22 @@ def _scan_pytorch_zip(
             extracted_tensors[pkl_entry] = ([len(floats)], floats)
 
     # Безопасное чтение сырых тензорных буферов из archive/data/* без запуска PyTorch
-    for storage_entry in storage_entries[:32]:
-        try:
-            raw_bytes = zf.read(storage_entry)
-            if len(raw_bytes) >= 12 and len(raw_bytes) % 4 == 0:
-                count = min(len(raw_bytes) // 4, 100000)
-                vals = list(struct.unpack(f"<{count}f", raw_bytes[: count * 4]))
-                if all(math.isfinite(v) for v in vals) and any(abs(v) > 1e-8 for v in vals):
-                    extracted_tensors[storage_entry] = ([count], vals)
-        except Exception:
-            pass
+    for storage_entry in storage_entries:
+        byte_len = zf.getinfo(storage_entry).file_size
+        if byte_len >= 4 and byte_len % 4 == 0:
+            count = byte_len // 4
+            with zf.open(storage_entry) as stream:
+                values = FloatTensorValues(stream, 0, count, "F32")
+                _analyze_tensor_weights({storage_entry: ([count], values)}, rel_name, findings)
+
+    if storage_entries:
+        findings.append(_make_finding(
+            rule_id="MDL-PT-WEIGHT-METADATA", obj=rel_name,
+            evidence=("Проверены все storage-буферы, кратные 4 байтам, в предположении float32. "
+                      "Типы, имена и формы тензоров из Pickle не восстановлены; проверки bias и норм строк недоступны."),
+            severity="low", category="analysis_coverage",
+            decision="Для проверки именованных тензоров и норм нейронов предоставить веса в SafeTensors.",
+        ))
 
     if extracted_tensors:
         _analyze_tensor_weights(extracted_tensors, rel_name, findings)
@@ -974,9 +975,9 @@ def _scan_safetensors_file(path: Path, rel_name: str, findings: list[dict[str, A
             if dtype in ("U8", "I8") and byte_len:
                 f.seek(data_start + start_off)
                 _record_prompt_markers(f.read(min(byte_len, 65536)), rel_name, key, findings, dims)
-            float_format = {"F16": ("e", 2), "BF16": ("H", 2), "F32": ("f", 4), "F64": ("d", 8)}.get(dtype)
+            float_format = FLOAT_FORMATS.get(dtype)
             if float_format and byte_len:
-                symbol, width = float_format
+                _, width = float_format
                 if (byte_len % width or not all(type(size) is int and size >= 0 for size in dims)
                         or math.prod(dims) * width != byte_len):
                     findings.append(_make_finding(
@@ -985,20 +986,8 @@ def _scan_safetensors_file(path: Path, rel_name: str, findings: list[dict[str, A
                         severity="high", status="confirmed", category="format_integrity",
                     ))
                     continue
-                count = min(byte_len // width, 100000)
-                f.seek(data_start + start_off)
-                buf = f.read(count * width)
-                vals = list(struct.unpack(f"<{count}{symbol}", buf))
-                if dtype == "BF16":
-                    vals = [struct.unpack("<f", struct.pack("<I", word << 16))[0] for word in vals]
+                vals = FloatTensorValues(f, data_start + start_off, byte_len // width, dtype)
                 _analyze_tensor_weights({key: (dims, vals)}, rel_name, findings)
-                if count < byte_len // width:
-                    findings.append(_make_finding(
-                        rule_id="MDL-WEIGHT-SAMPLED", obj=f"{rel_name} :: {key}",
-                        evidence=f"Прочитан префикс {count} из {byte_len // width} значений тензора.",
-                        severity="low", category="analysis_coverage",
-                        decision="При необходимости проверить полный тензор отдельным запуском.",
-                    ))
 
 def _scan_keras_or_h5(path: Path, rel_name: str, findings: list[dict[str, Any]]) -> None:
     raw = path.read_bytes()
@@ -1061,21 +1050,27 @@ def _scan_numpy_file(path: Path, rel_name: str, findings: list[dict[str, Any]]) 
         with zipfile.ZipFile(path, "r") as zf:
             for name in zf.namelist():
                 if name.endswith(".npy"):
-                    _scan_npy_bytes(zf.read(name), f"{rel_name} -> {name}", findings)
+                    with zf.open(name) as stream:
+                        _scan_npy_stream(stream, zf.getinfo(name).file_size, f"{rel_name} -> {name}", findings)
                 elif name.endswith(".pkl"):
                     _inspect_pickle_stream(zf.read(name), f"{rel_name} -> {name}", findings)
     else:
-        _scan_npy_bytes(path.read_bytes(), rel_name, findings)
+        with path.open("rb") as stream:
+            _scan_npy_stream(stream, path.stat().st_size, rel_name, findings)
 
 
-def _scan_npy_bytes(data: bytes, label: str, findings: list[dict[str, Any]]) -> None:
-    if len(data) < 10 or data[:6] != b"\x93NUMPY":
+def _scan_npy_stream(stream: BinaryIO, file_size: int, label: str, findings: list[dict[str, Any]]) -> None:
+    prefix = stream.read(8)
+    if file_size < 10 or prefix[:6] != b"\x93NUMPY":
         return
-    major = data[6]
-    header_len = struct.unpack("<H", data[8:10])[0] if major == 1 else struct.unpack("<I", data[8:12])[0]
+    major = prefix[6]
+    header_len = struct.unpack("<H", stream.read(2))[0] if major == 1 else struct.unpack("<I", stream.read(4))[0]
     offset = 10 if major == 1 else 12
-    header_str = data[offset : offset + header_len].decode("latin-1", errors="ignore").strip()
-    body = data[offset + header_len :]
+    if header_len > 100 * 1024 * 1024 or offset + header_len > file_size:
+        raise ValueError(f"Invalid NumPy header length: {label}")
+    header_str = stream.read(header_len).decode("latin-1").strip()
+    body_offset = offset + header_len
+    body_len = file_size - body_offset
 
     if "'|O'" in header_str or '"|O"' in header_str or "has_object" in header_str:
         findings.append(
@@ -1089,19 +1084,27 @@ def _scan_npy_bytes(data: bytes, label: str, findings: list[dict[str, Any]]) -> 
                 category="unsafe_serialization",
             )
         )
-        _inspect_pickle_stream(body, f"{label} (object payload)", findings)
+        _inspect_pickle_stream(stream.read(), f"{label} (object payload)", findings)
         return
 
-    try:
-        header_dict = ast.literal_eval(header_str)
-        descr = str(header_dict.get("descr", ""))
-        shape = list(header_dict.get("shape", ()))
-        if descr in ("<f4", "f4") and len(body) >= 12 and len(body) % 4 == 0:
-            count = min(len(body) // 4, 100000)
-            vals = list(struct.unpack(f"<{count}f", body[: count * 4]))
-            _analyze_tensor_weights({label: (shape or [count], vals)}, label, findings)
-    except Exception:
-        pass
+    header_dict = ast.literal_eval(header_str)
+    descr = str(header_dict.get("descr", ""))
+    shape = list(header_dict.get("shape", ()))
+    if descr in ("<f4", "f4") and body_len % 4 == 0:
+        count = body_len // 4
+        if not all(type(size) is int and size >= 0 for size in shape) or math.prod(shape) != count:
+            raise ValueError(f"NumPy shape does not match buffer size: {label}")
+        if header_dict.get("fortran_order"):
+            # Storage order does not map to C-order rows or coordinates.
+            findings.append(_make_finding(
+                rule_id="MDL-NUMPY-LAYOUT", obj=label,
+                evidence="Массив хранится в порядке Fortran: проверены все значения, но нормы строк и форма недоступны.",
+                severity="low", category="analysis_coverage",
+                decision="Предоставить массив в порядке C для проверки норм нейронов.",
+            ))
+            shape = [count]
+        vals = FloatTensorValues(stream, body_offset, count, "F32")
+        _analyze_tensor_weights({label: (shape, vals)}, label, findings)
 
 
 def _scan_json_model_file(path: Path, rel_name: str, findings: list[dict[str, Any]]) -> None:
@@ -1145,24 +1148,33 @@ def _scan_json_model_file(path: Path, rel_name: str, findings: list[dict[str, An
             )
         )
 
-    # 2. Если в JSON хранятся слои весов (например, weights/layers/tensors), проверяем их на закладки
-    tensors: dict[str, tuple[list[int], list[float]]] = {}
-    candidate_dicts = [content]
-    for subkey in ("weights", "tensors", "layers", "state_dict", "parameters"):
-        if isinstance(content.get(subkey), dict):
-            candidate_dicts.append(content[subkey])
+    # 2. Обход всех вложенных слоёв с сохранением полного пути параметра.
+    def numeric_tensor(value: Any) -> tuple[list[int], list[float]] | None:
+        if type(value) in (int, float):
+            return [], [float(value)]
+        if not isinstance(value, list) or not value:
+            return None
+        children = [numeric_tensor(child) for child in value]
+        if any(child is None for child in children):
+            return None
+        child_shape = children[0][0]
+        if any(child[0] != child_shape for child in children):
+            return None
+        return [len(value), *child_shape], [number for child in children for number in child[1]]
 
-    for d in candidate_dicts:
-        for k, v in d.items():
-            if isinstance(v, list) and v:
-                if all(isinstance(x, (int, float)) for x in v):
-                    tensors[str(k)] = ([len(v)], [float(x) for x in v])
-                elif all(isinstance(row, list) and row and all(isinstance(x, (int, float)) for x in row) for row in v):
-                    flat = [float(x) for row in v for x in row]
-                    tensors[str(k)] = ([len(v), len(v[0])], flat)
+    def visit(value: Any, location: str) -> None:
+        if isinstance(value, list):
+            tensor = numeric_tensor(value)
+            if tensor is not None:
+                _analyze_tensor_weights({location: tensor}, rel_name, findings)
+                return
+            for index, child in enumerate(value):
+                visit(child, f"{location}[{index}]")
+        elif isinstance(value, dict):
+            for key, child in value.items():
+                visit(child, f"{location}.{key}" if location else str(key))
 
-    if tensors:
-        _analyze_tensor_weights(tensors, rel_name, findings)
+    visit(content, "")
 
 
 def _check_reference_baseline(
