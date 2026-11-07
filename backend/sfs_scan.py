@@ -12,7 +12,7 @@ from pathlib import Path
 from backend import scan_ci
 from backend.scanners import model, wrapper
 from backend.sfs_dependencies import extra_dependencies
-from backend.sfs_rules import cache_fixture_findings, finding, model_fixture_findings, source_findings
+from backend.sfs_rules import cache_fixture_findings, docs_credential_findings, finding, model_fixture_findings, source_findings
 
 SCOPES = ("model", "api", "cache", "executor", "llm")
 PUBLIC_WEIGHT_SHA256 = "5af571cbf074e6d21a03528d2330792e532ca608f24ac70a143f6b369968ab8c"
@@ -26,10 +26,23 @@ RULES_WITH_SANITIZED_EVIDENCE = {
 }
 
 
+def api_docs(root: Path) -> tuple[str, ...]:
+    directory = root / "docs"
+    if directory.is_symlink():
+        raise ValueError("Символическая ссылка во входах: docs")
+    if not directory.is_dir():
+        return ()
+    return tuple(sorted(entry.relative_to(root).as_posix()
+                        for entry in directory.iterdir()
+                        if entry.name.lower() == "readme.md" and (entry.is_file() or entry.is_symlink())))
+
+
 def collect_inputs(scope: str, root: Path) -> dict[str, str]:
     names = ("model", *MODEL_EXTRAS) if scope == "model" else (f"src/{scope}",)
     if scope == "cache":
         names += ("docs/cache.db", "seed_cache.py")
+    elif scope == "api":
+        names += api_docs(root)
     digests = {}
     for name in names:
         path = root / name
@@ -155,6 +168,12 @@ def scan_scope(scope: str, root: Path) -> dict:
     else:
         raw = wrapper.scan(base)
         extra = [item for path in sorted(base.rglob("*.py")) for item in source_findings(path, root)]
+        if scope == "api":
+            for name in api_docs(root):
+                doc = root / name
+                if doc.is_symlink():
+                    raise ValueError("Символическая ссылка в документации API")
+                extra.extend(docs_credential_findings(doc, base / "server.py", root))
         if scope == "cache":
             extra.extend(cache_fixture_findings(root))
             seed = root / "seed_cache.py"
