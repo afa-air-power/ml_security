@@ -1,0 +1,753 @@
+{
+  "version": "15.0.7",
+  "scan": {
+    "type": "dependency_scanning",
+    "analyzer": {
+      "id": "swordfish-sfs",
+      "name": "Swordfish SFS",
+      "version": "1.1.0",
+      "vendor": {
+        "name": "Swordfish SFS"
+      }
+    },
+    "scanner": {
+      "id": "swordfish-sfs",
+      "name": "Swordfish SFS",
+      "version": "1.1.0",
+      "vendor": {
+        "name": "Swordfish SFS"
+      }
+    },
+    "status": "success",
+    "start_time": "2026-11-07T20:28:35",
+    "end_time": "2026-11-07T20:28:35",
+    "messages": []
+  },
+  "vulnerabilities": [
+    {
+      "id": "2d862766bc7d838e6ffe449f4c3c13039cace115066bf7c4f52522aeaf74479c",
+      "name": "SFS-DEP-CVE-2023-43804",
+      "description": "urllib3==1.26.9. Заголовок Cookie может уйти на другой origin при перенаправлении.",
+      "severity": "Medium",
+      "identifiers": [
+        {
+          "type": "cve",
+          "name": "CVE-2023-43804",
+          "value": "CVE-2023-43804",
+          "url": "https://www.cve.org/CVERecord?id=CVE-2023-43804"
+        },
+        {
+          "type": "sfs_rule",
+          "name": "SFS-DEP-CVE-2023-43804",
+          "value": "SFS-DEP-CVE-2023-43804"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-200",
+          "value": "200",
+          "url": "https://cwe.mitre.org/data/definitions/200.html"
+        }
+      ],
+      "location": {
+        "file": "docker-constraints.txt",
+        "dependency": {
+          "package": {
+            "name": "urllib3"
+          },
+          "version": "1.26.9"
+        }
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "docker-constraints.txt:1"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "В Docker constraints зафиксирована 1.26.9. Утечка требует Cookie и междоменных перенаправлений. Обновить и проверить транзитивное дерево."
+        }
+      },
+      "solution": "Обновить pin, проверить разрешённые транзитивные зависимости и собрать новый образ."
+    },
+    {
+      "id": "3e8b92abfb20454988d79dbcc04de40ef763ad60b68ba0676e1268c1b0340402",
+      "name": "SFS-DEP-CVE-2023-45803",
+      "description": "urllib3==1.26.9. Тело запроса может сохраниться после ответа 303 и смены метода на GET.",
+      "severity": "Medium",
+      "identifiers": [
+        {
+          "type": "cve",
+          "name": "CVE-2023-45803",
+          "value": "CVE-2023-45803",
+          "url": "https://www.cve.org/CVERecord?id=CVE-2023-45803"
+        },
+        {
+          "type": "sfs_rule",
+          "name": "SFS-DEP-CVE-2023-45803",
+          "value": "SFS-DEP-CVE-2023-45803"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-200",
+          "value": "200",
+          "url": "https://cwe.mitre.org/data/definitions/200.html"
+        }
+      ],
+      "location": {
+        "file": "docker-constraints.txt",
+        "dependency": {
+          "package": {
+            "name": "urllib3"
+          },
+          "version": "1.26.9"
+        }
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "docker-constraints.txt:1"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "urllib3 1.26.9 в Docker-ограничениях входит в диапазон ветки 1.x. Для утечки нужен подходящий редирект 303 и запрос с чувствительным телом; воспроизведение не проводилось."
+        }
+      },
+      "solution": "Обновить зависимость до исправленной версии (от 1.26.18 для этой ветки) и проверить lockfile.",
+      "links": [
+        {
+          "url": "https://github.com/urllib3/urllib3/security/advisories/GHSA-g4mx-q9vg-27p4"
+        }
+      ]
+    },
+    {
+      "id": "5e8a3195e292b615a78074bca960bce36f80a9f552327c09ad6974d8b4342d3d",
+      "name": "MDL-DEP-CVE-2024-37891",
+      "description": "urllib3==1.26.9 попадает в диапазон CVE-2024-37891.",
+      "severity": "Medium",
+      "identifiers": [
+        {
+          "type": "cve",
+          "name": "CVE-2024-37891",
+          "value": "CVE-2024-37891",
+          "url": "https://www.cve.org/CVERecord?id=CVE-2024-37891"
+        },
+        {
+          "type": "sfs_rule",
+          "name": "MDL-DEP-CVE-2024-37891",
+          "value": "MDL-DEP-CVE-2024-37891"
+        }
+      ],
+      "location": {
+        "file": "docker-constraints.txt",
+        "dependency": {
+          "package": {
+            "name": "urllib3"
+          },
+          "version": "1.26.9"
+        }
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "docker-constraints.txt:1 (urllib3==1.26.9)"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "Docker применяет docker-constraints.txt во втором pip install. Заявленная версия urllib3 1.26.9 входит в уязвимый диапазон <1.26.19. Утечка требует Proxy-Authorization и междоменных перенаправлений; фактическая достижимость в приложении не проверялась. Обновить ограничение и сверить версии в собранном образе."
+        }
+      },
+      "solution": "Сверить место с оригиналом и устранить выявленный механизм."
+    },
+    {
+      "id": "11042442b7858af43fda7e29227800af0a9a70466d5997dce9f64c71635983ab",
+      "name": "SFS-DEP-CVE-2024-11393",
+      "description": "transformers==4.44.0. Небезопасная десериализация при конвертации MaskFormer.",
+      "severity": "High",
+      "identifiers": [
+        {
+          "type": "cve",
+          "name": "CVE-2024-11393",
+          "value": "CVE-2024-11393",
+          "url": "https://www.cve.org/CVERecord?id=CVE-2024-11393"
+        },
+        {
+          "type": "sfs_rule",
+          "name": "SFS-DEP-CVE-2024-11393",
+          "value": "SFS-DEP-CVE-2024-11393"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-502",
+          "value": "502",
+          "url": "https://cwe.mitre.org/data/definitions/502.html"
+        }
+      ],
+      "location": {
+        "file": "requirements.txt",
+        "dependency": {
+          "package": {
+            "name": "transformers"
+          },
+          "version": "4.44.0"
+        }
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "requirements.txt:1"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "Версия Transformers 4.44.0 совпадает с диапазоном advisory. Уязвимая конвертация MaskFormer не наблюдалась в обычном пути загрузки SmolLM2."
+        }
+      },
+      "solution": "Обновить зависимость до исправленной версии (от 4.48.0 для этой ветки) и проверить lockfile.",
+      "links": [
+        {
+          "url": "https://www.zerodayinitiative.com/advisories/ZDI-24-1514/"
+        }
+      ]
+    },
+    {
+      "id": "86998d34d5227d5aa79eacbafcf7300a37b6d72f3691a4f23097ee878359d3d2",
+      "name": "SFS-DEP-CVE-2024-11394",
+      "description": "transformers==4.44.0. Небезопасная десериализация при конвертации модели Trax.",
+      "severity": "High",
+      "identifiers": [
+        {
+          "type": "cve",
+          "name": "CVE-2024-11394",
+          "value": "CVE-2024-11394",
+          "url": "https://www.cve.org/CVERecord?id=CVE-2024-11394"
+        },
+        {
+          "type": "sfs_rule",
+          "name": "SFS-DEP-CVE-2024-11394",
+          "value": "SFS-DEP-CVE-2024-11394"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-502",
+          "value": "502",
+          "url": "https://cwe.mitre.org/data/definitions/502.html"
+        }
+      ],
+      "location": {
+        "file": "requirements.txt",
+        "dependency": {
+          "package": {
+            "name": "transformers"
+          },
+          "version": "4.44.0"
+        }
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "requirements.txt:1"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "Версия Transformers 4.44.0 совпадает с диапазоном advisory. Для эксплуатации нужен уязвимый конвертер Trax и недоверенный файл; обычный путь SmolLM2 этого не подтверждает."
+        }
+      },
+      "solution": "Обновить зависимость до исправленной версии (от 4.48.0 для этой ветки) и проверить lockfile.",
+      "links": [
+        {
+          "url": "https://www.zerodayinitiative.com/advisories/ZDI-24-1515/"
+        }
+      ]
+    },
+    {
+      "id": "0df1e4915c27ff31f39c1b1db083a0951f28895e28d702ac69e212049840f8e8",
+      "name": "MDL-DEP-CVE-2024-11392",
+      "description": "transformers==4.44.0 попадает в диапазон CVE-2024-11392.",
+      "severity": "Critical",
+      "identifiers": [
+        {
+          "type": "cve",
+          "name": "CVE-2024-11392",
+          "value": "CVE-2024-11392",
+          "url": "https://www.cve.org/CVERecord?id=CVE-2024-11392"
+        },
+        {
+          "type": "sfs_rule",
+          "name": "MDL-DEP-CVE-2024-11392",
+          "value": "MDL-DEP-CVE-2024-11392"
+        }
+      ],
+      "location": {
+        "file": "requirements.txt",
+        "dependency": {
+          "package": {
+            "name": "transformers"
+          },
+          "version": "4.44.0"
+        }
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "requirements.txt:1 (transformers==4.44.0)"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "Манифест фиксирует transformers 4.44.0. Уязвимый путь относится к MobileViTV2, поэтому достижимость через SmolLM2 отдельно не установлена. Обновить пакет."
+        }
+      },
+      "solution": "Сверить место с оригиналом и устранить выявленный механизм."
+    },
+    {
+      "id": "76ee0e3ed9ede412b12996bbe741026c8135c080b283aa384dfce7b78c001c92",
+      "name": "SFS-DEP-CVE-2026-24747",
+      "description": "torch==2.4.0. Повреждение памяти при загрузке специально созданного checkpoint с weights_only=True.",
+      "severity": "High",
+      "identifiers": [
+        {
+          "type": "cve",
+          "name": "CVE-2026-24747",
+          "value": "CVE-2026-24747",
+          "url": "https://www.cve.org/CVERecord?id=CVE-2026-24747"
+        },
+        {
+          "type": "sfs_rule",
+          "name": "SFS-DEP-CVE-2026-24747",
+          "value": "SFS-DEP-CVE-2026-24747"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-502",
+          "value": "502",
+          "url": "https://cwe.mitre.org/data/definitions/502.html"
+        }
+      ],
+      "location": {
+        "file": "requirements.txt",
+        "dependency": {
+          "package": {
+            "name": "torch"
+          },
+          "version": "2.4.0"
+        }
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "requirements.txt:2"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "Torch 2.4.0 входит в диапазон. Эксплуатация требует загрузки специально созданного PyTorch checkpoint; штатный код выбирает SafeTensors."
+        }
+      },
+      "solution": "Обновить зависимость до исправленной версии (от 2.10.0 для этой ветки) и проверить lockfile.",
+      "links": [
+        {
+          "url": "https://github.com/pytorch/pytorch/security/advisories/GHSA-63cw-57p8-fm3p"
+        }
+      ]
+    },
+    {
+      "id": "5cfeebd544e4381535f3d6d94bdf503bd2b5215b338c3a4d5a096716abe5c1f4",
+      "name": "MDL-DEP-CVE-2025-32434",
+      "description": "torch==2.4.0 попадает в диапазон CVE-2025-32434.",
+      "severity": "Critical",
+      "identifiers": [
+        {
+          "type": "cve",
+          "name": "CVE-2025-32434",
+          "value": "CVE-2025-32434",
+          "url": "https://www.cve.org/CVERecord?id=CVE-2025-32434"
+        },
+        {
+          "type": "sfs_rule",
+          "name": "MDL-DEP-CVE-2025-32434",
+          "value": "MDL-DEP-CVE-2025-32434"
+        }
+      ],
+      "location": {
+        "file": "requirements.txt",
+        "dependency": {
+          "package": {
+            "name": "torch"
+          },
+          "version": "2.4.0"
+        }
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "requirements.txt:2 (torch==2.4.0)"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "Манифест фиксирует torch 2.4.0. CVE относится к torch.load; штатный путь загружает SafeTensors. Удалить старые контейнеры и обновить пакет."
+        }
+      },
+      "solution": "Сверить место с оригиналом и устранить выявленный механизм."
+    },
+    {
+      "id": "433a554521676a4bd45b08b1c17e8c31447da54e03a1376978ab3ef04b3feac1",
+      "name": "SFS-DEP-CVE-2018-18074",
+      "description": "requests==2.19.1. Authorization сохраняется при HTTPS→HTTP перенаправлении на том же хосте.",
+      "severity": "Medium",
+      "identifiers": [
+        {
+          "type": "cve",
+          "name": "CVE-2018-18074",
+          "value": "CVE-2018-18074",
+          "url": "https://www.cve.org/CVERecord?id=CVE-2018-18074"
+        },
+        {
+          "type": "sfs_rule",
+          "name": "SFS-DEP-CVE-2018-18074",
+          "value": "SFS-DEP-CVE-2018-18074"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-319",
+          "value": "319",
+          "url": "https://cwe.mitre.org/data/definitions/319.html"
+        }
+      ],
+      "location": {
+        "file": "requirements.txt",
+        "dependency": {
+          "package": {
+            "name": "requests"
+          },
+          "version": "2.19.1"
+        }
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "requirements.txt:3"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "Пин Requests 2.19.1 ниже исправления. Утечка требует перенаправления HTTPS→HTTP на том же хосте и заголовка авторизации. После второй команды Docker версия Requests меняется."
+        }
+      },
+      "solution": "Обновить зависимость до исправленной версии (от 2.20.0 для этой ветки) и проверить lockfile.",
+      "links": [
+        {
+          "url": "https://www.cve.org/CVERecord?id=CVE-2018-18074"
+        }
+      ]
+    },
+    {
+      "id": "b155b16cdda15767fe4a35e3152b8be48ecb944f6d48794140c1a2a7f94470f4",
+      "name": "SFS-DEP-CVE-2023-32681",
+      "description": "requests==2.19.1. Утечка Proxy-Authorization при отдельных перенаправлениях.",
+      "severity": "Medium",
+      "identifiers": [
+        {
+          "type": "cve",
+          "name": "CVE-2023-32681",
+          "value": "CVE-2023-32681",
+          "url": "https://www.cve.org/CVERecord?id=CVE-2023-32681"
+        },
+        {
+          "type": "sfs_rule",
+          "name": "SFS-DEP-CVE-2023-32681",
+          "value": "SFS-DEP-CVE-2023-32681"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-200",
+          "value": "200",
+          "url": "https://cwe.mitre.org/data/definitions/200.html"
+        }
+      ],
+      "location": {
+        "file": "requirements.txt",
+        "dependency": {
+          "package": {
+            "name": "requests"
+          },
+          "version": "2.19.1"
+        }
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "requirements.txt:3"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "Версия ниже 2.31.0 в первом шаге установки и локальном манифесте. Второй Docker-шаг её обновляет. Объединить зависимости в единый lock."
+        }
+      },
+      "solution": "Обновить pin, проверить разрешённые транзитивные зависимости и собрать новый образ."
+    },
+    {
+      "id": "fc5b28391ba9f88a3d3ebeb744e75880b3bdf95a821121c8c6da1a796a766306",
+      "name": "SFS-DEP-CVE-2024-47081",
+      "description": "requests==2.19.1. Специальный URL может раскрыть данные из .netrc.",
+      "severity": "Medium",
+      "identifiers": [
+        {
+          "type": "cve",
+          "name": "CVE-2024-47081",
+          "value": "CVE-2024-47081",
+          "url": "https://www.cve.org/CVERecord?id=CVE-2024-47081"
+        },
+        {
+          "type": "sfs_rule",
+          "name": "SFS-DEP-CVE-2024-47081",
+          "value": "SFS-DEP-CVE-2024-47081"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-200",
+          "value": "200",
+          "url": "https://cwe.mitre.org/data/definitions/200.html"
+        }
+      ],
+      "location": {
+        "file": "requirements.txt",
+        "dependency": {
+          "package": {
+            "name": "requests"
+          },
+          "version": "2.19.1"
+        }
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "requirements.txt:3"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "Пин Requests 2.19.1 и диапазон Requests в Docker ниже исправления. Утечка требует специально сформированного URL и наличия .netrc; штатная телеметрия использует urllib."
+        }
+      },
+      "solution": "Обновить зависимость до исправленной версии (от 2.32.4 для этой ветки) и проверить lockfile.",
+      "links": [
+        {
+          "url": "https://github.com/psf/requests/security/advisories/GHSA-9hjg-9r4m-mvj7"
+        }
+      ]
+    },
+    {
+      "id": "2ef5398e243dfade360587186686811e8f48706f56f55252c40edfc29fc129b9",
+      "name": "SFS-DEP-CVE-2026-25645",
+      "description": "requests==2.19.1. Предсказуемый временный файл при прямом вызове extract_zipped_paths.",
+      "severity": "Medium",
+      "identifiers": [
+        {
+          "type": "cve",
+          "name": "CVE-2026-25645",
+          "value": "CVE-2026-25645",
+          "url": "https://www.cve.org/CVERecord?id=CVE-2026-25645"
+        },
+        {
+          "type": "sfs_rule",
+          "name": "SFS-DEP-CVE-2026-25645",
+          "value": "SFS-DEP-CVE-2026-25645"
+        },
+        {
+          "type": "cwe",
+          "name": "CWE-377",
+          "value": "377",
+          "url": "https://cwe.mitre.org/data/definitions/377.html"
+        }
+      ],
+      "location": {
+        "file": "requirements.txt",
+        "dependency": {
+          "package": {
+            "name": "requests"
+          },
+          "version": "2.19.1"
+        }
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "requirements.txt:3"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "Пин Requests 2.19.1 ниже исправления. Advisory описывает только прямой вызов extract_zipped_paths; такой вызов в коде обёртки не найден."
+        }
+      },
+      "solution": "Обновить зависимость до исправленной версии (от 2.33.0 для этой ветки) и проверить lockfile.",
+      "links": [
+        {
+          "url": "https://github.com/psf/requests/security/advisories/GHSA-gc5v-m9x4-r6x2"
+        }
+      ]
+    },
+    {
+      "id": "47d4b9810f0a24695df0ded905f944d3903d9e2fd994dd194024c4b64b66da70",
+      "name": "MDL-DEP-CVE-2024-35195",
+      "description": "requests==2.19.1 попадает в диапазон CVE-2024-35195.",
+      "severity": "Medium",
+      "identifiers": [
+        {
+          "type": "cve",
+          "name": "CVE-2024-35195",
+          "value": "CVE-2024-35195",
+          "url": "https://www.cve.org/CVERecord?id=CVE-2024-35195"
+        },
+        {
+          "type": "sfs_rule",
+          "name": "MDL-DEP-CVE-2024-35195",
+          "value": "MDL-DEP-CVE-2024-35195"
+        }
+      ],
+      "location": {
+        "file": "requirements.txt",
+        "dependency": {
+          "package": {
+            "name": "requests"
+          },
+          "version": "2.19.1"
+        }
+      },
+      "details": {
+        "sfs_object": {
+          "type": "text",
+          "name": "Место по данным SFS",
+          "value": "requirements.txt:3 (requests==2.19.1)"
+        },
+        "sfs_triage": {
+          "type": "text",
+          "name": "Решение триажа SFS",
+          "value": "true_positive"
+        },
+        "sfs_comment": {
+          "type": "text",
+          "name": "Обоснование триажа",
+          "value": "Подтверждён уязвимый pin в requirements.txt. Для эксплуатации нужен Session с первым вызовом verify=False. Обновить разрешённый диапазон."
+        }
+      },
+      "solution": "Сверить место с оригиналом и устранить выявленный механизм."
+    }
+  ],
+  "dependency_files": [
+    {
+      "path": "docker-constraints.txt",
+      "package_manager": "pip",
+      "dependencies": [
+        {
+          "package": {
+            "name": "urllib3"
+          },
+          "version": "1.26.9"
+        }
+      ]
+    },
+    {
+      "path": "requirements.txt",
+      "package_manager": "pip",
+      "dependencies": [
+        {
+          "package": {
+            "name": "transformers"
+          },
+          "version": "4.44.0"
+        },
+        {
+          "package": {
+            "name": "torch"
+          },
+          "version": "2.4.0"
+        },
+        {
+          "package": {
+            "name": "requests"
+          },
+          "version": "2.19.1"
+        }
+      ]
+    }
+  ]
+}
