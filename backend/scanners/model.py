@@ -499,14 +499,12 @@ def _inspect_pickle_stream(
                 except (ValueError, TypeError):
                     pass
             elif opname in ("SHORT_BINBYTES", "BINBYTES", "BINBYTES8") and isinstance(arg, (bytes, bytearray)):
-                # Проверяем, нет ли вложенного pickle или буфера float32
                 if len(arg) >= 4 and arg[:2] in (b"\x80\x02", b"\x80\x03", b"\x80\x04", b"\x80\x05"):
                     nested_floats = _inspect_pickle_stream(
                         bytes(arg), f"{source_label} -> nested_pickle@{pos_val}", findings, depth + 1
                     )
                     extracted_floats.extend(nested_floats)
                 elif len(arg) >= 16 and len(arg) % 4 == 0 and len(extracted_floats) < 250000:
-                    # Попытка безопасной распаковки буфера float32 (например, из numpy/torch сериализации)
                     count = min(len(arg) // 4, 50000)
                     try:
                         vals = struct.unpack(f"<{count}f", arg[: count * 4])
@@ -1034,7 +1032,6 @@ def _scan_onnx_file(path: Path, rel_name: str, findings: list[dict[str, Any]]) -
     raw = path.read_bytes()
     latin = raw.decode("latin-1", errors="ignore")
 
-    # Поиск Path Traversal в external_data (CVE-2024-5187 / CVE-2024-27318)
     traversal_match = re.search(r"(\.\./|\.\.\\|/etc/passwd|/proc/self)", latin)
     if traversal_match:
         findings.append(
@@ -1154,7 +1151,6 @@ def _scan_json_model_file(path: Path, rel_name: str, findings: list[dict[str, An
         if key.lower() in PROMPT_FIELDS and isinstance(value, str):
             _record_prompt_markers(value[:65536].encode("utf-8"), rel_name, key, findings)
 
-    # 1. Проверка HuggingFace auto_map (выполнение произвольного кода при trust_remote_code=True)
     if "auto_map" in content:
         findings.append(
             _make_finding(
@@ -1171,7 +1167,6 @@ def _scan_json_model_file(path: Path, rel_name: str, findings: list[dict[str, An
             )
         )
 
-    # 2. Обход всех вложенных слоёв с сохранением полного пути параметра.
     def numeric_tensor(value: Any) -> tuple[list[int], list[float]] | None:
         if type(value) in (int, float):
             return [], [float(value)]
@@ -1449,12 +1444,10 @@ def scan(
             else sorted(p for p in model_dir.rglob("*") if p.is_file())
         )
 
-        # Отделяем служебные файлы (README.md, .gitkeep, reference.json)
         candidate_files = [
             p for p in all_files if p.name.lower() not in IGNORED_FILENAMES
         ]
 
-        # Дополнительно проверяем корневой requirements.txt, если он передан явно
         dep_files = [p for p in candidate_files if p.name.lower() in DEPENDENCY_FILENAMES]
         if requirements_path:
             req_p = Path(requirements_path)

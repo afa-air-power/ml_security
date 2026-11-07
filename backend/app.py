@@ -65,7 +65,6 @@ def generate_report_for_preset(preset: str) -> dict:
             wrapper.scan(target_path=empty_dir),
         )
 
-    # По умолчанию сканируем рабочие папки model/ и wrapper/
     return build_report(model.scan(), wrapper.scan())
 
 

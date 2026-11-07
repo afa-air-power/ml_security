@@ -122,7 +122,6 @@ def ensure_examples_generated() -> Path:
     for d in (vuln_model, vuln_wrapper, clean_model, clean_wrapper, unsup_model, unsup_wrapper):
         d.mkdir(parents=True, exist_ok=True)
 
-    # 1. Набор с уязвимостями (vulnerable):
     rows, cols = 12, 16
     weights_matrix: list[float] = []
     for r in range(rows):
@@ -198,7 +197,6 @@ def ensure_examples_generated() -> Path:
     ]
     (vuln_wrapper / "service.py").write_text("\n".join(wrapper_lines), encoding="utf-8")
 
-    # 2. Чистый эталонный набор (clean):
     clean_weights = [math.sin(i * 0.5) * 0.12 for i in range(128)]
     clean_bias = [0.01, -0.02, 0.015, -0.005, 0.01, -0.01, 0.005, -0.015]
     clean_st = build_safetensors_bytes(
@@ -241,7 +239,6 @@ def ensure_examples_generated() -> Path:
         encoding="utf-8",
     )
 
-    # 3. Набор с неподдерживаемым форматом (unsupported):
     (unsup_model / "legacy_engine.RandomBlobFormat").write_bytes(b"UNSUPPORTED_BINARY_HEADER_0001")
     (unsup_wrapper / "compiled_module.wasm").write_bytes(b"\x00asm\x01\x00\x00\x00")
 

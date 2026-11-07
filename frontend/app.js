@@ -310,7 +310,6 @@ function renderFindings(report) {
       continue;
     }
 
-    // Панель быстрого сохранения триажа
     const editor = document.createElement("div");
     editor.className = "triage-editor";
 

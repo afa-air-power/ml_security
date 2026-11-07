@@ -232,7 +232,6 @@ class PythonSecurityASTVisitor(ast.NodeVisitor):
         return raw_name
 
     def visit_Assign(self, node: ast.Assign) -> None:
-        # Проверка захардкоженных секретов / API-ключей / токенов в присваиваниях
         if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
             val = node.value.value.strip()
             for target in node.targets:
@@ -269,7 +268,6 @@ class PythonSecurityASTVisitor(ast.NodeVisitor):
         lineno = getattr(node, "lineno", 1)
         snippet = self._snippet(lineno)
 
-        # 1. Прямое выполнение кода: eval / exec / compile
         if call_name in ("eval", "exec", "builtins.eval", "builtins.exec"):
             self.findings.append(
                 _make_finding(
@@ -283,7 +281,6 @@ class PythonSecurityASTVisitor(ast.NodeVisitor):
                 )
             )
 
-        # 2. Небезопасная десериализация Pickle / Dill / Marshal / Shelve / Joblib
         elif call_name in (
             "pickle.load",
             "pickle.loads",
@@ -313,7 +310,6 @@ class PythonSecurityASTVisitor(ast.NodeVisitor):
                 )
             )
 
-        # 3. PyTorch torch.load без weights_only=True
         elif call_name == "torch.load" or raw_name.endswith(".torch.load"):
             weights_only_kw = _get_kwarg(node, "weights_only")
             if weights_only_kw is None or _is_constant_false(weights_only_kw):
@@ -333,7 +329,6 @@ class PythonSecurityASTVisitor(ast.NodeVisitor):
                     )
                 )
 
-        # 4. PyYAML yaml.load без SafeLoader
         elif call_name in ("yaml.load", "yaml.unsafe_load", "yaml.full_load"):
             loader_kw = _get_kwarg(node, "Loader")
             loader_name = _get_call_name(loader_kw) if loader_kw else ""
@@ -350,7 +345,6 @@ class PythonSecurityASTVisitor(ast.NodeVisitor):
                     )
                 )
 
-        # 5. HuggingFace trust_remote_code=True
         elif raw_name.endswith("from_pretrained") or call_name.endswith("from_pretrained"):
             trc_kw = _get_kwarg(node, "trust_remote_code")
             if _is_constant_true(trc_kw):
@@ -369,7 +363,6 @@ class PythonSecurityASTVisitor(ast.NodeVisitor):
                     )
                 )
 
-        # 6. Инъекция команд ОС (Command Injection)
         elif call_name in ("os.system", "os.popen", "posix.system", "commands.getoutput", "commands.getstatusoutput"):
             self.findings.append(
                 _make_finding(
@@ -403,7 +396,6 @@ class PythonSecurityASTVisitor(ast.NodeVisitor):
                     )
                 )
 
-        # 7. SQL-инъекция при динамическом формировании запроса
         elif isinstance(node.func, ast.Attribute) and node.func.attr in ("execute", "executemany", "executescript"):
             query = node.args[0] if node.args else next(
                 (kw.value for kw in node.keywords if kw.arg in ("operation", "query", "sql", "sql_script")), None
@@ -421,7 +413,6 @@ class PythonSecurityASTVisitor(ast.NodeVisitor):
                     )
                 )
 
-        # 8. SSRF / Загрузка внешних весов или URL по пользовательскому параметру
         elif call_name in (
             "requests.get",
             "requests.post",
@@ -461,7 +452,6 @@ class PythonSecurityASTVisitor(ast.NodeVisitor):
                         )
                     )
 
-        # 9. Path Traversal при открытии файлов по внешнему имени
         elif call_name in ("open", "builtins.open", "io.open", "flask.send_file", "fastapi.responses.FileResponse"):
             if node.args and _is_dynamic_expr(node.args[0]):
                 arg_dump = ast.unparse(node.args[0]) if hasattr(ast, "unparse") else ""
@@ -482,7 +472,6 @@ class PythonSecurityASTVisitor(ast.NodeVisitor):
                             )
                         )
 
-        # 10. Запуск веб-сервера с debug=True
         elif raw_name.endswith(".run"):
             debug_kw = _get_kwarg(node, "debug")
             if _is_constant_true(debug_kw):
@@ -498,7 +487,6 @@ class PythonSecurityASTVisitor(ast.NodeVisitor):
                     )
                 )
 
-        # 11. Слабое хэширование (MD5 / SHA1) для проверки безопасности/паролей
         elif call_name in ("hashlib.md5", "hashlib.sha1"):
             self.findings.append(
                 _make_finding(

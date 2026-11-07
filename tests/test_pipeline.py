@@ -47,7 +47,6 @@ class PipelineSecurityTests(unittest.TestCase):
 
         self.assertEqual(m_res["status"], "ok")
         model_rule_ids = {f["id"] for f in m_res["findings"]}
-        # Проверяем детект RCE в Pickle, закладок в весах (нейрон, выброс, bias), auto_map и CVE
         self.assertIn("MDL-PICKLE-RCE", model_rule_ids)
         self.assertIn("MDL-BACKDOOR-NEURON", model_rule_ids)
         self.assertIn("MDL-BACKDOOR-OUTLIER", model_rule_ids)
