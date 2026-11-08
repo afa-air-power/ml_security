@@ -37,12 +37,12 @@ IGNORED_FILENAMES = {
 
 def _rel_path(path: Path, base_dir: Path) -> str:
     try:
-        return str(path.resolve().relative_to(ROOT_DIR.resolve()))
+        return path.resolve().relative_to(ROOT_DIR.resolve()).as_posix()
     except ValueError:
         try:
-            return str(path.resolve().relative_to(base_dir.resolve()))
+            return path.resolve().relative_to(base_dir.resolve()).as_posix()
         except ValueError:
-            return str(path)
+            return path.as_posix()
 
 
 def _make_finding(

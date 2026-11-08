@@ -3,7 +3,9 @@ default:
   tags: [sfs-local]
 
 variables:
-  SFS_INPUT_DIR: "task_export"
+  # model/ and src/ are in the checkout root. For a separate export, override
+  # SFS_INPUT_DIR with its directory in the project's CI variables.
+  SFS_INPUT_DIR: "."
   PYTHONDONTWRITEBYTECODE: "1"
 
 stages:

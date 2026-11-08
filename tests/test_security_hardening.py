@@ -91,6 +91,27 @@ class FullWeightCoverageTests(unittest.TestCase):
 
 
 class GitLabReportTests(unittest.TestCase):
+    def test_nested_scanner_paths_export_on_every_platform(self):
+        fixtures = {
+            "model": ("model/nested/artifact.pkl", b"cbuiltins\neval\n."),
+            "api": ("src/api/nested/service.py",
+                    b"import hashlib\ndef digest(data):\n    return hashlib.md5(data).hexdigest()\n"),
+        }
+        with TemporaryDirectory() as folder:
+            root = Path(folder)
+            for scope, (name, data) in fixtures.items():
+                with self.subTest(scope=scope):
+                    path = root / name
+                    path.parent.mkdir(parents=True)
+                    path.write_bytes(data)
+                    check = sfs_scan.run(scope, root, root / "cache")
+                    self.assertEqual(check["status"], "ok")
+                    self.assertIn(name, check["scanned_files"])
+                    report = sfs_report.build_report([check], {})
+                    native = build_gitlab_reports(report, datetime.now(timezone.utc))
+                    locations = [item["location"]["file"] for item in native["sast"]["vulnerabilities"]]
+                    self.assertIn(name, locations)
+
     def test_native_reports_preserve_binary_sites_and_group_exact_pins(self):
         def finding(rule, obj, **extra):
             return {"id": rule, "object": obj, "severity": "high", "evidence": "Evidence.",

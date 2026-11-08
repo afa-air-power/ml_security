@@ -4,6 +4,7 @@ import json
 from datetime import datetime, timezone
 import os
 from pathlib import Path
+import sys
 
 from backend.decision_graph import build_graph
 from backend.gitlab_reports import source_prefix, write_gitlab_reports
@@ -121,6 +122,33 @@ def markdown(report: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
+def log_gate(report: dict, triage_path: Path) -> None:
+    """Keep CI diagnostics visible when the JSON on stdout is redirected."""
+    summary = report["summary"]
+    blocking = [warning for warning in report["warnings"] if warning["blocking"]]
+    print(f"sfs_report: {summary['overall_status']}; findings={summary['total_findings']}; "
+          f"unresolved={summary['blocking_findings_count']}; blocking_warnings={len(blocking)}", file=sys.stderr)
+    print(f"sfs_report: {summary['gate_reason']}", file=sys.stderr)
+    if summary["gate_passed"]:
+        return
+
+    for warning in blocking[:20]:
+        print(f"  [{warning['contour']}/{warning['code']}] {warning['message']}", file=sys.stderr)
+    if len(blocking) > 20:
+        print(f"  Ещё блокирующих предупреждений: {len(blocking) - 20}. См. warnings в JSON-отчёте.", file=sys.stderr)
+
+    unresolved = [item for check in report["checks"] for item in check["findings"]
+                  if item["status"] == "unresolved"]
+    if unresolved:
+        print(f"sfs_report: Проверьте статус и непустой comment по ключу key в {triage_path}:", file=sys.stderr)
+        for item in unresolved[:20]:
+            print(f"  [{item['scope']}/{item['id']}] {item['object']}; key={item['key']}", file=sys.stderr)
+        if len(unresolved) > 20:
+            print(f"  Ещё находок без решения: {len(unresolved) - 20}. См. checks в JSON-отчёте.", file=sys.stderr)
+    elif any(warning["code"] == "TRIAGE_REGISTRY_ERROR" for warning in blocking):
+        print(f"sfs_report: Проверьте реестр триажа: {triage_path}.", file=sys.stderr)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Объединить пять отчётов SFS и проверить решения триажа.")
     parser.add_argument("--reports", type=Path, required=True)
@@ -158,6 +186,7 @@ def main():
         args.markdown.write_text(markdown(report), encoding="utf-8")
     if args.gitlab_dir is not None:
         write_gitlab_reports(args.gitlab_dir, report, started, source_prefix(args.gitlab_source_root, Path.cwd()))
+    log_gate(report, args.triage)
     if not report["summary"]["gate_passed"]:
         raise SystemExit(1)
 

@@ -74,6 +74,7 @@ def relative_object(value: str, root: Path, scope_dir: Path) -> str:
     # Findings outside the scanner checkout can contain native Windows paths.
     value = value.removeprefix(str(root) + "\\")
     value = value.removeprefix(f"{root}/")
+    value = value.removeprefix(root.as_posix() + "/")
     project = Path(__file__).resolve().parents[1]
     if root.is_relative_to(project) and root != project:
         value = value.removeprefix(root.relative_to(project).as_posix() + "/")
@@ -286,7 +287,11 @@ def main():
         os.environ[variable] = "0"  # Official profile is offline and deterministic.
     report = run(args.scope, args.input, args.cache)
     print(json.dumps(report, ensure_ascii=False, allow_nan=False, indent=2))
+    print(f"{args.scope}: input={args.input.absolute()}", file=sys.stderr)
     print(f"{args.scope}: {report['status']}, cache={report.get('execution', {}).get('cache', 'bypass')}", file=sys.stderr)
+    if report["status"] != "ok":
+        print(f"{args.scope}: {report['message']}", file=sys.stderr)
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":
